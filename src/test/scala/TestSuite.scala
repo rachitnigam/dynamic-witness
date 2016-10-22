@@ -4,7 +4,36 @@ import dwit._
 import Syntax._
 import Evaluation._
 
-class SimpleTests extends FunSuite {
+class TestSuite extends FunSuite {
+
+  test("tuple") {
+    val p = ETuple(EVal(VNum(1)), EVal(VNum(2)))
+    assert(eval(p) == VTuple(VNum(1), VNum(2)))
+  }
+
+  test("tree -- leaf") {
+    val p = ELeaf
+    eval(p) match {
+      case Leaf(_) => assert(true)
+      case p => assert(false, s"leaf did not equal $p")
+    }
+  }
+
+  test("tree -- node") {
+    val p = ENode(EVal(VNum(1)), ELeaf, ELeaf)
+
+    FreshGen.reset()
+    val (res, _, ts) = cekLoop((Left(p), Map(), List()), Map(), Map())
+
+    res match {
+      case Node(t, VNum(1), Leaf(t1), Leaf(t2)) => {
+        val typeT1 = ts(t1.asInstanceOf[TAlpha]) == t
+        val typeT2 = ts(t2.asInstanceOf[TAlpha]) == t
+        assert(typeT2 && typeT1, s"Types in the tree don't match: $t, $t1, $t2")
+      }
+      case p => assert(false, s"leaf did not equal $p")
+    }
+  }
 
   test("1 + 1") {
     val p = EAdd(EVal(VNum(1)), EVal(VNum(2)))
@@ -21,4 +50,32 @@ class SimpleTests extends FunSuite {
     assert(eval(p) == VNum(2))
   }
 
+  test("function application") {
+    val p = EApp(EVal(VLambda("x", EAdd(EVar("x"), EVal(VNum(1))))), EVal(VNum(2)))
+
+    FreshGen.reset()
+    val (res, _, ts) = cekLoop((Left(p), Map(), List()), Map(), Map())
+    assert(res == VNum(3))
+    println(Console.RED + s"ts" + Console.RESET)
+  }
+
+  test("case of -- product") {
+    val tup = ETuple(EVal(VNum(1)), EVal(VNum(2)))
+    val p = ECaseOfProduct(tup, List("x", "y"), EAdd(EVar("x"), EVar("y")))
+    assert(eval(p) == VNum(3))
+  }
+
+  test("case of -- tree: Leaf") {
+    val p =
+      ECaseOfTree(ELeaf, EVal(VBool(true)), List("x", "y", "z"),
+        EVal(VBool(false)))
+    assert(eval(p) == VBool(true))
+  }
+
+  test("case of -- tree: Node") {
+    val p =
+      ECaseOfTree(ENode(EVal(VNum(1)), ELeaf, ELeaf), EVal(VBool(true)),
+        List("x", "y", "z"), EVar("x"))
+    assert(eval(p) == VNum(1))
+  }
 }

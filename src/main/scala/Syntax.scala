@@ -8,7 +8,22 @@ object Syntax {
   type TypeSubst = Map[TAlpha, Type]
   type ValSubst = Map[VHole, Value]
 
-  sealed trait Expr
+  sealed trait Expr {
+    override def toString: String = this match {
+      case EVal(c) => c.toString
+      case EVar(id) => id
+      case EApp(e1, e2) => s"($e1 $e2)"
+      case EAdd(e1, e2) => s"$e1 + $e2"
+      case EITE(p, c, a) => s"if $p then $c else $a"
+      case ETuple(e1, e2) => s"($e1, $e2)"
+      case ELeaf => "leaf"
+      case ENode(e1, e2, e3) => s"node($e1, $e2, $e3)"
+      case ECaseOfProduct(e, bind, b) => s"case $e of ${bind.mkString(",")} => $b"
+      case ECaseOfTree(e, lb, bind, b) => {
+        s"case $e of\nleaf => $lb\nnode ${bind.mkString(",")} => $b"
+      }
+    }
+  }
   case class EVal(v: Value) extends Expr
   case class EVar(id: Id) extends Expr
   case class EApp(e1: Expr, e2: Expr) extends Expr
@@ -20,7 +35,17 @@ object Syntax {
   case class ENode(e1: Expr, e2: Expr, e3: Expr) extends Expr
   case object ELeaf extends Expr
 
-  sealed trait Value
+  sealed trait Value {
+    override def toString: String = this match {
+      case VNum(i) => i.toString
+      case VBool(b) => b.toString
+      case VTuple(t1, t2) => s"($t1, $t2)"
+      case VLambda(id, b) => s"(λi$id. $b)"
+      case VHole(i, t) => s"[$i, $t]"
+      case Leaf(t) => s"leaf[$t]"
+      case Node(t, t1, t2, t3) => s"node[$t]($t1, $t2, $t3)"
+    }
+  }
   case class VNum(i: Int) extends Value
   case class VBool(b: Boolean) extends Value
   case class VTuple(v1: Value, v2: Value) extends Value

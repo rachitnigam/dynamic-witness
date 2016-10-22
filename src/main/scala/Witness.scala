@@ -76,14 +76,20 @@ object Helpers {
         val theta1 = unify(t1, t2, theta)
         (Some(n), sig, theta1)
       }
-      case _ => (None, sig, theta)
+      case p => {
+        println(s"got $p")
+        (None, sig, theta)
+      }
     }
   }
 
   def narrow(v: Value, t: Type, s: ValSubst, th: TypeSubst):
     (Option[Value], ValSubst, TypeSubst) = {
       try { n_fail(v, t, s, th) } catch {
-        case UnificationError(_) => (None, s, th)
+        case UnificationError(m) => {
+          println(m)
+          (None, s, th)
+        }
       }
     }
 
@@ -103,7 +109,7 @@ object Helpers {
     if (t1 == t2) subst
     else {
       (t1, t2) match {
-        case (TAlpha(_), TAlpha(_)) => throw new UnificationError(s"Tried to unify $t1 and $t2")
+        case (a@TAlpha(_), b@TAlpha(_)) => compose(a, b, subst)
         case (a@TAlpha(_), typ) => compose(a, typ, subst)
         case (typ, a@TAlpha(_)) => compose(a, typ, subst)
         case (TTuple(l1, r1), TTuple(l2, r2)) => {
