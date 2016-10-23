@@ -3,33 +3,6 @@ package dwit
 import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
 /*
 
-  c ::= n | b | undefined | null | BOT
-
-  e :: =
-  | c
-  | id
-  | e[e]
-  | e.e
-  | e[e] := e
-  | id := e
-  | function((id,)*) = e
-  | declassify e
-  | endorse e
-  | if e then e else e
-  | while e: e
-  | break id: e
-  | id (,id)*: e
-  | let id = e in e
-  | id(e*)
-  | {(id, e)*}
-  | [e*]
-  | e(e*)
-  | e binop e
-  | e `id` e
-  | uniop e
-  | `id` e
-  | e; e
-  | < l ? e : e >
 
 */
 
@@ -57,13 +30,18 @@ private class ParseQuark extends RegexParsers with PackratParsers {
     "true" ^^ (_ => true) | "false" ^^ (_ => false)
   )
 
-  lazy val id: P[Id] = """[_a-zA-Z][_0-9a-zA-Z]*""".r ^^ (x => x)
+  val keys = Set("if", "then", "else", "let", "in", "false", "true")
+  def notKeyword: PartialFunction[String, String] = {
+    case id if keys.contains(id) == false => id
+  }
 
+  lazy val _id: P[Id] = """[_a-zA-Z][_0-9a-zA-Z]*""".r ^^ (x => x)
+  lazy val id = _id ^? (notKeyword, (id => s"$id encountered"))
   lazy val varId: P[Expr] = id ^^ (x => EVar(x))
 
   lazy val tuple: P[Expr] = "(" ~> expr ~ "," ~ expr <~ ")" ^^ { case l ~ _ ~ r => ETuple(l, r) }
 
-  lazy val atom: P[Expr] =  (
+  lazy val atom: P[Expr] = (
     number        ^^ (n => EVal(VNum(n)))       |
     bool          ^^ (b => EVal(VBool(b)))      |
     varId                                       |
@@ -71,7 +49,7 @@ private class ParseQuark extends RegexParsers with PackratParsers {
     "(" ~> expr <~ ")"
   )
 
-  lazy val app: P[Expr] =  (
+  lazy val app: P[Expr] = (
     app ~ atom  ^^ { case a ~ as => EApp(a, as) } |
     atom
   )
@@ -115,9 +93,8 @@ private class ParseQuark extends RegexParsers with PackratParsers {
     and
   )
 
-  lazy val fargs: P[List[Id]] = repsep(id, ",")
   lazy val expr: P[Expr] =  (
-    "function" ~ id ~ "->" ~ expr ^^ { case arg ~ _ ~ _ ~ b => mkFun(arg, b) }     |
+    "fun" ~> id ~ "->" ~ expr ^^ { case arg ~ _ ~ b => mkFun(arg, b) }     |
     "if" ~> expr ~ "then" ~ expr ~ "else" ~ expr ^^ { case p ~ _ ~ c ~ _ ~ a => EITE(p, c, a) }|
     "let" ~> id ~ "=" ~ expr ~ "in" ~ expr ^^ { case i ~ _ ~ v ~ _ ~ b => let(i, v, b) }       |
     or

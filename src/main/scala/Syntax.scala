@@ -46,7 +46,7 @@ object Syntax {
       case VNum(i) => i.toString
       case VBool(b) => b.toString
       case VTuple(t1, t2) => s"($t1, $t2)"
-      case VLambda(id, b) => s"(λi$id. $b)"
+      case VLambda(id, b) => s"(λ$id. $b)"
       case VHole(i, t) => s"[$i, $t]"
       case Leaf(t) => s"leaf[$t]"
       case Node(t, t1, t2, t3) => s"node[$t]($t1, $t2, $t3)"
