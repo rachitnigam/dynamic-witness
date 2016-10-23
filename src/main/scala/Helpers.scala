@@ -86,6 +86,7 @@ object Helpers {
 
   def narrow(v: Value, t: Type, s: ValSubst, th: TypeSubst):
     (Option[Value], ValSubst, TypeSubst) = {
+      println(Console.CYAN + s"narrow called with $v, $t, $th" + Console.RESET)
       try { n_fail(v, t, s, th) } catch {
         case UnificationError(m) => {
           println(m)

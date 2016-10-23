@@ -39,16 +39,28 @@ object Evaluation {
     s"Stuck errors should be caught: $msg\ntypeSub: $tSub\nvalueSub: $vSub"
   )
 
-  def eval(e: Expr): Value = {
-    FreshGen.reset()
-    cekLoop((Left(e), Map(), List()), Map(), Map())._1
-  }
+  def findWitness(e: Expr) = _findWitness(0, e)
 
+  def saturateExpr(e: Expr): Value = saturate(eval(e))
   def saturate(v: Value): Value = v match {
     case f@VLambda(_, _, _) => {
       saturate(eval(EApp(EVal(f), EVal(FreshGen.freshHole(FreshGen.freshType)))))
     }
     case _ => v
+  }
+
+  private def _findWitness(bound: Int, e: Expr): Option[(ValSubst, TypeSubst)] = try {
+    saturateExpr(e)
+    if (bound >= 100) None
+    else _findWitness(bound + 1, e)
+  } catch {
+    case Stuck(_, vSub, tSub) => Some((vSub, tSub))
+  }
+
+
+  def eval(e: Expr): Value = {
+    FreshGen.reset()
+    cekLoop((Left(e), Map(), List()), Map(), Map())._1
   }
 
   def cekLoop(state: State, vSub: ValSubst, tSub: TypeSubst):
@@ -62,6 +74,29 @@ object Evaluation {
       }
     }
   }
+
+  def tracingCekLoop(state: State, vSub: ValSubst, tSub: TypeSubst, gr: StringBuilder): String = {
+    state._1 match {
+      case Left(r) => gr ++= s""""$r""""
+      case Right(r) => gr ++= s""""$r"""
+    }
+
+    state match {
+      case (Right(v), _, Nil) => {
+        gr ++= ";\n}"
+        gr.toString
+      }
+      case state => {
+        val (s, vs, ts) = cek(state, vSub, tSub)
+        s._1 match {
+          case Left(r) => gr ++= s""" -> "$r";"""
+          case Right(r) => gr ++= s""" -> "$r";"""
+        }
+        tracingCekLoop(s, vs, ts, gr)
+      }
+    }
+  }
+
 
   def cek(state: State, vSub: ValSubst, tSub: TypeSubst): (State, ValSubst, TypeSubst) = {
     state match {
