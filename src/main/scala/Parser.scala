@@ -22,6 +22,10 @@ private class ParseQuark extends RegexParsers with PackratParsers {
   def _div: (Int, Int) => Int = (_ / _)
   def _sub: (Int, Int) => Int = (_ - _)
 
+  def _eq: (Int, Int) => Boolean = (_ == _)
+  def _lt: (Int, Int) => Boolean = (_ < _)
+  def _gt: (Int, Int) => Boolean = (_ > _)
+
   type P[A] = PackratParser[A]
 
   lazy val number: P[Int] = """[-]?\d+""".r ^^ (x => x.toInt)
@@ -30,7 +34,7 @@ private class ParseQuark extends RegexParsers with PackratParsers {
     "true" ^^ (_ => true) | "false" ^^ (_ => false)
   )
 
-  val keys = Set("if", "then", "else", "let", "in", "false", "true")
+  val keys = Set("if", "then", "else", "let", "in", "false", "true", "and", "or")
   def notKeyword: PartialFunction[String, String] = {
     case id if keys.contains(id) == false => id
   }
@@ -70,19 +74,19 @@ private class ParseQuark extends RegexParsers with PackratParsers {
     mul
   )
 
-  //lazy val cmp: P[Expr] =  (
-  //  cmp ~ ">" ~ add ^^ { case l ~ _ ~ r => Op("gt", List(l,r)) }  |
-  //  cmp ~ "<" ~ add ^^ { case l ~ _ ~ r => Op("lt", List(l,r)) }  |
-  //  cmp ~ "==" ~ add ^^ { case l ~ _ ~ r => Op("eq", List(l,r)) } |
-  //  add
-  //)
+  lazy val cmp: P[Expr] =  (
+    add ~ ">" ~ add ^^ { case l ~ _ ~ r => ECmp(_gt,l,r) }  |
+    add ~ "<" ~ add ^^ { case l ~ _ ~ r => ECmp(_lt,l,r) }  |
+    add ~ "=" ~ add ^^ { case l ~ _ ~ r => ECmp(_eq,l,r) } |
+    add
+  )
 
   lazy val and: P[Expr] =  (
-    and ~ "and" ~ add ^^ { case l ~ _ ~ r => {
+    and ~ "and" ~ cmp ^^ { case l ~ _ ~ r => {
       val nname = "_and" + freshBoolConst().toString
       let(nname, l, EITE(EVar(nname), r, EVar(nname)))
     }} |
-    add
+    cmp
   )
 
   lazy val or: P[Expr] =  (

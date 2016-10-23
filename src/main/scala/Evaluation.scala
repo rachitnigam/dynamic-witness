@@ -7,14 +7,22 @@ object Context {
   sealed trait Kont
   case class KAppL(e: Expr, env: Env) extends Kont
   case class KAppR(v: Value) extends Kont
+
   case class KAddL(e: Expr, op: (Int, Int) => Int, env: Env) extends Kont
   case class KAddR(v: Value, op: (Int, Int) => Int) extends Kont
+
+  case class KCmpL(e: Expr, op: (Int, Int) => Boolean, env: Env) extends Kont
+  case class KCmpR(v: Value, op: (Int, Int) => Boolean) extends Kont
+
   case class KIf(c: Expr, a: Expr, env: Env) extends Kont
+
   case class KProdL(e: Expr, env: Env) extends Kont
   case class KProdR(v: Value) extends Kont
+
   case class KNode1(next: Expr, e: Expr, env: Env) extends Kont
   case class KNode2(v: Value, next: Expr, env: Env) extends Kont
   case class KNode3(v1: Value, v2: Value) extends Kont
+
   case class KCaseOfProduct(bind: List[Id], e: Expr, env: Env) extends Kont
   case class KCaseOfTree(leafBody: Expr, bind: List[Id], nodeBody: Expr, env: Env) extends Kont
 }
@@ -55,6 +63,7 @@ object Evaluation {
       case EVar(i) => ((Right(env(i)), env, kont), vSub, tSub)
       case EApp(e1, e2) => ((Left(e1), env, KAppL(e2, env) :: kont), vSub, tSub)
       case EAdd(op, e1, e2) => ((Left(e1), env, KAddL(e2, op, env) :: kont), vSub, tSub)
+      case ECmp(op, e1, e2) => ((Left(e1), env, KCmpL(e2, op, env) :: kont), vSub, tSub)
       case EITE(p, c, a) => ((Left(p), env, KIf(c, a, env) :: kont), vSub, tSub)
       case ETuple(e1, e2) => ((Left(e1), env, KProdL(e2, env) :: kont), vSub, tSub)
       case ECaseOfProduct(e, b, body) => {
@@ -85,7 +94,21 @@ object Evaluation {
         case (Some(VNum(lv)), vs, ts) => {
           narrow(r, TInt, vs, ts) match {
             case (None, vs2, ts2) => throw Stuck(s"Failed on $kTop and $v", vs2, ts2)
-            case (Some(VNum(rv)), vs2, ts2) => ((Right(VNum(op(lv, rv))), topEnv, kont), vs2, ts)
+            case (Some(VNum(rv)), vs2, ts2) => ((Right(VNum(op(rv, lv))), topEnv, kont), vs2, ts)
+            case _ => ??? // Unreachable Code
+          }
+        }
+        case (Some(_), _, _) => ??? //Unreachable code
+      }
+
+      case KCmpL(e, op, env) => ((Left(e), env, KCmpR(v, op) :: kont), vSub, tSub)
+
+      case KCmpR(r, op) => narrow(v, TInt, vSub, tSub) match {
+        case (None, v, t) => throw Stuck(s"Failed on $kTop and $v", v, t)
+        case (Some(VNum(lv)), vs, ts) => {
+          narrow(r, TInt, vs, ts) match {
+            case (None, vs2, ts2) => throw Stuck(s"Failed on $kTop and $v", vs2, ts2)
+            case (Some(VNum(rv)), vs2, ts2) => ((Right(VBool(op(rv, lv))), topEnv, kont), vs2, ts)
             case _ => ??? // Unreachable Code
           }
         }
