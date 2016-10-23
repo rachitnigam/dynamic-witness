@@ -79,4 +79,19 @@ class EvalTests extends org.scalatest.FunSuite {
     parseAndEval("""2 > 1""", VBool(true))
   }
 
+  test("shadowing works") {
+    parseAndEval("""
+      let x = 1 in
+        let x = x + x in
+          x""", VNum(2)
+    )
+  }
+
+  test("functions use local env") {
+    parseAndEval("""
+      let y = 10 in
+        let f = fun x -> x + y in
+          let y = 2 in
+            f 20""", VNum(30))
+  }
 }
