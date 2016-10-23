@@ -87,6 +87,19 @@ class EvalTests extends org.scalatest.FunSuite {
     )
   }
 
+  test("let bindings for functions") {
+    parseAndEval("""
+      let f x = x + 1 in
+        f 10""", VNum(11)
+        )
+  }
+
+  test("let bindings for multi-arg functions") {
+    parseAndEval("""
+      let f x y z = x + 2*y + 3*z in
+        f 1 2 3""", VNum(14))
+  }
+
   test("functions use local env") {
     parseAndEval("""
       let y = 10 in

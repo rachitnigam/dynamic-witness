@@ -15,8 +15,6 @@ private class ParseQuark extends RegexParsers with PackratParsers {
     boolConst
   }
 
-  def mkFun(id: Id, b: Expr): Expr = EVal(VLambda(id, b))
-
   def _add: (Int, Int) => Int = (_ + _)
   def _mul: (Int, Int) => Int = (_ * _)
   def _div: (Int, Int) => Int = (_ / _)
@@ -97,10 +95,13 @@ private class ParseQuark extends RegexParsers with PackratParsers {
     and
   )
 
-  lazy val expr: P[Expr] =  (
+  lazy val expr: P[Expr] = (
     "fun" ~> id ~ "->" ~ expr ^^ { case arg ~ _ ~ b => mkFun(arg, b) }     |
     "if" ~> expr ~ "then" ~ expr ~ "else" ~ expr ^^ { case p ~ _ ~ c ~ _ ~ a => EITE(p, c, a) }|
     "let" ~> id ~ "=" ~ expr ~ "in" ~ expr ^^ { case i ~ _ ~ v ~ _ ~ b => let(i, v, b) }       |
+    "let" ~> id ~ rep1(id) ~ "=" ~ expr ~  "in" ~ expr ^^ {
+      case fName ~ args ~ _ ~ fBody ~ _ ~ body => let(fName, mkMultiArgsFun(args, fBody), body)
+    } |
     or
   )
 }

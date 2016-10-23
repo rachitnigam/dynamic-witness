@@ -7,11 +7,13 @@ object Syntax {
 
   type TypeSubst = Map[TAlpha, Type]
   type ValSubst = Map[VHole, Value]
+  type Env = Map[Id, Value]
 
   sealed trait Expr {
     override def toString: String = this match {
       case EVal(c) => c.toString
       case EVar(id) => id
+      case EFun(id, b) => s"(λ$id. $b)"
       case EApp(e1, e2) => s"($e1 $e2)"
       case EAdd(_, e1, e2) => s"$e1 add $e2"
       case ECmp(_, e1, e2) => s"$e1 cmp $e2"
@@ -27,6 +29,7 @@ object Syntax {
   }
   case class EVal(v: Value) extends Expr
   case class EVar(id: Id) extends Expr
+  case class EFun(id: Id, body: Expr) extends Expr
   case class EApp(e1: Expr, e2: Expr) extends Expr
   case class EAdd(op: (Int, Int) => Int, e1: Expr, e2: Expr) extends Expr
   case class ECmp(op: (Int, Int) => Boolean, e1: Expr, e2: Expr) extends Expr
@@ -38,8 +41,15 @@ object Syntax {
   case object ELeaf extends Expr
 
   def let(id: Id, v: Expr, body: Expr) = {
-    EApp(EVal(VLambda(id, body)), v)
+    EApp(EFun(id, body), v)
   }
+
+  def mkFun(id: Id, b: Expr): Expr = EFun(id, b)
+
+  def mkMultiArgsFun(args: List[Id], body: Expr): Expr = {
+    args.foldRight(body)({ case (id, acc) => mkFun(id, acc) })
+  }
+
 
   def cons(hd: Expr, tl: Expr) = ENode(hd, tl, ELeaf)
 
@@ -48,7 +58,7 @@ object Syntax {
       case VNum(i) => i.toString
       case VBool(b) => b.toString
       case VTuple(t1, t2) => s"($t1, $t2)"
-      case VLambda(id, b) => s"(λ$id. $b)"
+      case VLambda(id, b, _) => s"(λ$id. $b)"
       case VHole(i, t) => s"[$i, $t]"
       case Leaf(t) => s"leaf[$t]"
       case Node(t, t1, t2, t3) => s"node[$t]($t1, $t2, $t3)"
@@ -57,7 +67,7 @@ object Syntax {
   case class VNum(i: Int) extends Value
   case class VBool(b: Boolean) extends Value
   case class VTuple(v1: Value, v2: Value) extends Value
-  case class VLambda(id: Id, body: Expr) extends Value
+  case class VLambda(id: Id, body: Expr, closure: Env) extends Value
   case class VHole(ident: HoleId, typ: Type) extends Value
   case class Node(t: Type, v1: Value, v2: Value, v3: Value) extends Value
   case class Leaf(t: Type) extends Value

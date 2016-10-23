@@ -53,7 +53,7 @@ class TestSuite extends FunSuite {
   }
 
   test("function application") {
-    val p = EApp(EVal(VLambda("x", EAdd(_add, EVar("x"), EVal(VNum(1))))), EVal(VNum(2)))
+    val p = EApp(EVal(VLambda("x", EAdd(_add, EVar("x"), EVal(VNum(1))), Map())), EVal(VNum(2)))
 
     FreshGen.reset()
     val (res, _, ts) = cekLoop((Left(p), Map(), List()), Map(), Map())

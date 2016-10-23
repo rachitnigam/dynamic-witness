@@ -6,7 +6,7 @@ object Context {
 
   sealed trait Kont
   case class KAppL(e: Expr, env: Env) extends Kont
-  case class KAppR(v: Value) extends Kont
+  case class KAppR(v: Value, env: Env) extends Kont
 
   case class KAddL(e: Expr, op: (Int, Int) => Int, env: Env) extends Kont
   case class KAddR(v: Value, op: (Int, Int) => Int) extends Kont
@@ -61,6 +61,7 @@ object Evaluation {
     case (Left(e), env, kont) => e match {
       case EVal(v) => ((Right(v), env, kont), vSub, tSub)
       case EVar(i) => ((Right(env(i)), env, kont), vSub, tSub)
+      case EFun(i, b) => ((Right(VLambda(i, b, env)), env, kont), vSub, tSub)
       case EApp(e1, e2) => ((Left(e1), env, KAppL(e2, env) :: kont), vSub, tSub)
       case EAdd(op, e1, e2) => ((Left(e1), env, KAddL(e2, op, env) :: kont), vSub, tSub)
       case ECmp(op, e1, e2) => ((Left(e1), env, KCmpL(e2, op, env) :: kont), vSub, tSub)
@@ -79,11 +80,11 @@ object Evaluation {
     case (Right(_), _, Nil) => (state, vSub, tSub)
 
     case (Right(v), topEnv, kTop::kont) => kTop match {
-      case KAppL(e, env) => ((Left(e), env, KAppR(v) :: kont), vSub, tSub)
+      case KAppL(e, env) => ((Left(e), env, KAppR(v, env) :: kont), vSub, tSub)
 
-      case KAppR(fun) => narrow(fun, TFun, vSub, tSub) match {
+      case KAppR(fun, _) => narrow(fun, TFun, vSub, tSub) match {
         case (None, v, t) => throw Stuck(s"Failed on $kTop and $v", v, t)
-        case (Some(VLambda(i, e)), vs, ts) => ((Left(e), topEnv + (i -> v), kont), vs, ts)
+        case (Some(VLambda(i, e, fEnv)), vs, ts) => ((Left(e), fEnv + (i -> v), kont), vs, ts)
         case (Some(_), _, _) => ??? //Unreachable code
       }
 

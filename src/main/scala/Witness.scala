@@ -31,7 +31,8 @@ object Helpers {
     case TInt => VNum(10) //TODO(Change this to be random)
     case TBool => VBool(scala.util.Random.nextBoolean)
     case TTuple(t1, t2) => VTuple(gen(t1), gen(t2))
-    case TFun => VLambda("x", EVal(freshHole(freshType())))
+    // TODO(rachit): This might be wrong
+    case TFun => VLambda("x", EVal(freshHole(freshType())), Map())
     case TTree(t) => scala.util.Random.nextGaussian match {
       case n if n <= 0 => Leaf(t)
       case _ => {
@@ -62,7 +63,7 @@ object Helpers {
       }
       case (n@VNum(_), TInt) => (Some(n), sig, theta)
       case (b@VBool(_), TBool) => (Some(b), sig, theta)
-      case (l@VLambda(_, _), TFun) => (Some(l), sig, theta)
+      case (l@VLambda(_, _, _), TFun) => (Some(l), sig, theta)
       case (t@VTuple(v1, v2), TTuple(t1, t2)) => {
         val theta1 = unify(typeOf(v1), t1, theta)
         val theta2 = unify(typeOf(v2), t2, theta1)
@@ -96,7 +97,7 @@ object Helpers {
   def typeOf(v: Value): Type = v match {
     case VNum(_) => TInt
     case VBool(_) => TBool
-    case VLambda(_, _) => TFun
+    case VLambda(_, _, _) => TFun
     case VTuple(t1, t2) => TTuple(typeOf(t1), typeOf(t2))
     case Leaf(t) => TTree(t)
     case Node(t, _, _, _) => TTree(t)
