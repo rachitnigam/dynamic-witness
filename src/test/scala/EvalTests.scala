@@ -108,7 +108,7 @@ class EvalTests extends org.scalatest.FunSuite {
             f 20""", VNum(30))
   }
 
-  test("Recursive function") {
+  test("recursive function") {
     parseAndEval("""
       let fac = fix fc ->
         fun x ->
@@ -117,6 +117,32 @@ class EvalTests extends org.scalatest.FunSuite {
           else
             x * fc (x - 1)
       in fac 5""", VNum(120)
+      )
+  }
+
+  test("scope for fix works") {
+    parseAndEval("""
+      let fac = fix fac ->
+        fun x ->
+          if x = 0 then
+            1
+          else
+            x * fac (x - 1)
+      in fac 5""", VNum(120)
+      )
+  }
+
+  test("let rec works") {
+    parseAndEval("""
+      let rec fac x = if x > 0 then x * fac (x - 1) else 1
+      in fac 5""", VNum(120)
+      )
+  }
+
+  test("recursive function with two arguments works") {
+    parseAndEval("""
+      let rec add x y = if x = 0 then y else 1 + (add (x - 1) y)
+      in add 4 6""", VNum(10)
       )
   }
 }

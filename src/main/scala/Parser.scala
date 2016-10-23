@@ -33,7 +33,7 @@ private class ParseQuark extends RegexParsers with PackratParsers {
   )
 
   val keys = Set(
-    "if", "then", "else", "let", "in", "false", "true", "and", "or", "fix"
+    "if", "then", "else", "let", "in", "false", "true", "and", "or", "fix", "rec"
   )
   def notKeyword: PartialFunction[String, String] = {
     case id if keys.contains(id) == false => id
@@ -101,6 +101,9 @@ private class ParseQuark extends RegexParsers with PackratParsers {
     "fun" ~> id ~ "->" ~ expr ^^ { case arg ~ _ ~ b => mkFun(arg, b) }     |
     "if" ~> expr ~ "then" ~ expr ~ "else" ~ expr ^^ { case p ~ _ ~ c ~ _ ~ a => EITE(p, c, a) }|
     "let" ~> id ~ "=" ~ expr ~ "in" ~ expr ^^ { case i ~ _ ~ v ~ _ ~ b => let(i, v, b) }       |
+    "let" ~ "rec" ~> id ~ rep1(id) ~ "=" ~ expr ~ "in" ~ expr ^^ {
+      case fn ~ args ~ _ ~ fb ~ _ ~ body => let(fn, recFun(fn, args, fb), body)
+    } |
     "fix" ~> id ~ "->" ~ expr ^^ { case fn ~ _ ~ fb => EFix(fn, fb) }                          |
     "let" ~> id ~ rep1(id) ~ "=" ~ expr ~  "in" ~ expr ^^ {
       case fName ~ args ~ _ ~ fBody ~ _ ~ body => let(fName, mkMultiArgsFun(args, fBody), body)

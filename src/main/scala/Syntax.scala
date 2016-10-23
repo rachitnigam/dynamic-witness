@@ -46,6 +46,10 @@ object Syntax {
     EApp(EFun(id, body), v)
   }
 
+  def recFun(fName: Id, args: List[Id], body: Expr) = {
+    EFix(fName, mkMultiArgsFun(args, body))
+  }
+
   def mkFun(id: Id, b: Expr): Expr = EFun(id, b)
 
   def mkMultiArgsFun(args: List[Id], body: Expr): Expr = {
