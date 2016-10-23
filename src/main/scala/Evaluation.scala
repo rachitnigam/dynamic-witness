@@ -44,6 +44,13 @@ object Evaluation {
     cekLoop((Left(e), Map(), List()), Map(), Map())._1
   }
 
+  def saturate(v: Value): Value = v match {
+    case f@VLambda(_, _, _) => {
+      saturate(eval(EApp(EVal(f), EVal(FreshGen.freshHole(FreshGen.freshType)))))
+    }
+    case _ => v
+  }
+
   def cekLoop(state: State, vSub: ValSubst, tSub: TypeSubst):
     (Value, ValSubst, TypeSubst) = {
     state match {
