@@ -13,7 +13,7 @@ object Syntax {
       case EVal(c) => c.toString
       case EVar(id) => id
       case EApp(e1, e2) => s"($e1 $e2)"
-      case EAdd(e1, e2) => s"$e1 + $e2"
+      case EAdd(_, e1, e2) => s"$e1 add $e2"
       case EITE(p, c, a) => s"if $p then $c else $a"
       case ETuple(e1, e2) => s"($e1, $e2)"
       case ELeaf => "leaf"
@@ -27,13 +27,19 @@ object Syntax {
   case class EVal(v: Value) extends Expr
   case class EVar(id: Id) extends Expr
   case class EApp(e1: Expr, e2: Expr) extends Expr
-  case class EAdd(e1: Expr, e2: Expr) extends Expr
+  case class EAdd(op: (Int, Int) => Int, e1: Expr, e2: Expr) extends Expr
   case class EITE(p: Expr, c: Expr, a: Expr) extends Expr
   case class ETuple(e1: Expr, e2: Expr) extends Expr
   case class ECaseOfProduct(e: Expr, bind: List[Id], body: Expr) extends Expr
   case class ECaseOfTree(e: Expr, leafBody: Expr, bind: List[Id], body: Expr) extends Expr
   case class ENode(e1: Expr, e2: Expr, e3: Expr) extends Expr
   case object ELeaf extends Expr
+
+  def let(id: Id, v: Expr, body: Expr) = {
+    EApp(EVal(VLambda(id, body)), v)
+  }
+
+  def cons(hd: Expr, tl: Expr) = ENode(hd, tl, ELeaf)
 
   sealed trait Value {
     override def toString: String = this match {

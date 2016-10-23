@@ -6,6 +6,8 @@ import Evaluation._
 
 class TestSuite extends FunSuite {
 
+  def _add: (Int, Int) => Int = (_ + _)
+
   test("tuple") {
     val p = ETuple(EVal(VNum(1)), EVal(VNum(2)))
     assert(eval(p) == VTuple(VNum(1), VNum(2)))
@@ -36,7 +38,7 @@ class TestSuite extends FunSuite {
   }
 
   test("1 + 1") {
-    val p = EAdd(EVal(VNum(1)), EVal(VNum(2)))
+    val p = EAdd(_add, EVal(VNum(1)), EVal(VNum(2)))
     assert(eval(p) == VNum(3))
   }
 
@@ -51,7 +53,7 @@ class TestSuite extends FunSuite {
   }
 
   test("function application") {
-    val p = EApp(EVal(VLambda("x", EAdd(EVar("x"), EVal(VNum(1))))), EVal(VNum(2)))
+    val p = EApp(EVal(VLambda("x", EAdd(_add, EVar("x"), EVal(VNum(1))))), EVal(VNum(2)))
 
     FreshGen.reset()
     val (res, _, ts) = cekLoop((Left(p), Map(), List()), Map(), Map())
@@ -61,7 +63,7 @@ class TestSuite extends FunSuite {
 
   test("case of -- product") {
     val tup = ETuple(EVal(VNum(1)), EVal(VNum(2)))
-    val p = ECaseOfProduct(tup, List("x", "y"), EAdd(EVar("x"), EVar("y")))
+    val p = ECaseOfProduct(tup, List("x", "y"), EAdd(_add, EVar("x"), EVar("y")))
     assert(eval(p) == VNum(3))
   }
 

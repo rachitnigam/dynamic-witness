@@ -7,8 +7,8 @@ object Context {
   sealed trait Kont
   case class KAppL(e: Expr, env: Env) extends Kont
   case class KAppR(v: Value) extends Kont
-  case class KAddL(e: Expr, env: Env) extends Kont
-  case class KAddR(v: Value) extends Kont
+  case class KAddL(e: Expr, op: (Int, Int) => Int, env: Env) extends Kont
+  case class KAddR(v: Value, op: (Int, Int) => Int) extends Kont
   case class KIf(c: Expr, a: Expr, env: Env) extends Kont
   case class KProdL(e: Expr, env: Env) extends Kont
   case class KProdR(v: Value) extends Kont
@@ -54,7 +54,7 @@ object Evaluation {
       case EVal(v) => ((Right(v), env, kont), vSub, tSub)
       case EVar(i) => ((Right(env(i)), env, kont), vSub, tSub)
       case EApp(e1, e2) => ((Left(e1), env, KAppL(e2, env) :: kont), vSub, tSub)
-      case EAdd(e1, e2) => ((Left(e1), env, KAddL(e2, env) :: kont), vSub, tSub)
+      case EAdd(op, e1, e2) => ((Left(e1), env, KAddL(e2, op, env) :: kont), vSub, tSub)
       case EITE(p, c, a) => ((Left(p), env, KIf(c, a, env) :: kont), vSub, tSub)
       case ETuple(e1, e2) => ((Left(e1), env, KProdL(e2, env) :: kont), vSub, tSub)
       case ECaseOfProduct(e, b, body) => {
@@ -78,14 +78,14 @@ object Evaluation {
         case (Some(_), _, _) => ??? //Unreachable code
       }
 
-      case KAddL(e, env) => ((Left(e), env, KAddR(v) :: kont), vSub, tSub)
+      case KAddL(e, op, env) => ((Left(e), env, KAddR(v, op) :: kont), vSub, tSub)
 
-      case KAddR(r) => narrow(v, TInt, vSub, tSub) match {
+      case KAddR(r, op) => narrow(v, TInt, vSub, tSub) match {
         case (None, v, t) => throw Stuck(s"Failed on $kTop and $v", v, t)
         case (Some(VNum(lv)), vs, ts) => {
           narrow(r, TInt, vs, ts) match {
             case (None, vs2, ts2) => throw Stuck(s"Failed on $kTop and $v", vs2, ts2)
-            case (Some(VNum(rv)), vs2, ts2) => ((Right(VNum(lv + rv)), topEnv, kont), vs2, ts)
+            case (Some(VNum(rv)), vs2, ts2) => ((Right(VNum(op(lv, rv))), topEnv, kont), vs2, ts)
             case _ => ??? // Unreachable Code
           }
         }
