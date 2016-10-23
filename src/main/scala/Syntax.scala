@@ -13,7 +13,8 @@ object Syntax {
     override def toString: String = this match {
       case EVal(c) => c.toString
       case EVar(id) => id
-      case EFun(id, b) => s"(λ$id. $b)"
+      case EFun(id, b) => s"(fun $id -> $b)"
+      case EFix(fn, fb) => s"fix $fn -> $fb"
       case EApp(e1, e2) => s"($e1 $e2)"
       case EAdd(_, e1, e2) => s"$e1 add $e2"
       case ECmp(_, e1, e2) => s"$e1 cmp $e2"
@@ -30,6 +31,7 @@ object Syntax {
   case class EVal(v: Value) extends Expr
   case class EVar(id: Id) extends Expr
   case class EFun(id: Id, body: Expr) extends Expr
+  case class EFix(fName: Id, func: Expr) extends Expr
   case class EApp(e1: Expr, e2: Expr) extends Expr
   case class EAdd(op: (Int, Int) => Int, e1: Expr, e2: Expr) extends Expr
   case class ECmp(op: (Int, Int) => Boolean, e1: Expr, e2: Expr) extends Expr
@@ -58,7 +60,7 @@ object Syntax {
       case VNum(i) => i.toString
       case VBool(b) => b.toString
       case VTuple(t1, t2) => s"($t1, $t2)"
-      case VLambda(id, b, _) => s"(λ$id. $b)"
+      case VLambda(id, b, e) => s"(λ$id. $b, env: $e)"
       case VHole(i, t) => s"[$i, $t]"
       case Leaf(t) => s"leaf[$t]"
       case Node(t, t1, t2, t3) => s"node[$t]($t1, $t2, $t3)"

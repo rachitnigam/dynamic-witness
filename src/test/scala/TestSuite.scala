@@ -56,9 +56,8 @@ class TestSuite extends FunSuite {
     val p = EApp(EVal(VLambda("x", EAdd(_add, EVar("x"), EVal(VNum(1))), Map())), EVal(VNum(2)))
 
     FreshGen.reset()
-    val (res, _, ts) = cekLoop((Left(p), Map(), List()), Map(), Map())
+    val (res, _, _) = cekLoop((Left(p), Map(), List()), Map(), Map())
     assert(res == VNum(3))
-    println(Console.RED + s"ts" + Console.RESET)
   }
 
   test("case of -- product") {

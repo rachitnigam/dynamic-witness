@@ -12,4 +12,14 @@ class WitnessTests extends org.scalatest.FunSuite {
     println(findWitness(p))
   }
 
+  test("recursive function") {
+    val p = parse("""
+      let fac = fix fc ->
+        fun x -> if x > 0 then x * fc (x - 1) else true
+        in fac
+      """
+    )
+    println(findWitness(p))
+  }
+
 }

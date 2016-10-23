@@ -107,4 +107,16 @@ class EvalTests extends org.scalatest.FunSuite {
           let y = 2 in
             f 20""", VNum(30))
   }
+
+  test("Recursive function") {
+    parseAndEval("""
+      let fac = fix fc ->
+        fun x ->
+          if x = 0 then
+            1
+          else
+            x * fc (x - 1)
+      in fac 5""", VNum(120)
+      )
+  }
 }

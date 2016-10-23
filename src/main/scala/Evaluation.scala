@@ -57,7 +57,6 @@ object Evaluation {
     case Stuck(_, vSub, tSub) => Some((vSub, tSub))
   }
 
-
   def eval(e: Expr): Value = {
     FreshGen.reset()
     cekLoop((Left(e), Map(), List()), Map(), Map())._1
@@ -68,7 +67,7 @@ object Evaluation {
     state match {
       case (Right(v), _, Nil) => (v, vSub, tSub)
       case state => {
-        println(s"$state, $vSub, $tSub")
+        println(s"$state, $vSub, $tSub\n")
         val (s, vs, ts) = cek(state, vSub, tSub)
         cekLoop(s, vs, ts)
       }
@@ -97,6 +96,26 @@ object Evaluation {
     }
   }
 
+  def substFix(fb: Expr, fName: Id)(implicit fixExpr: Expr): Expr = fb match {
+    case vfun@EVal(VLambda(i, b, e)) => {
+      if (i == fName) vfun else EVal(VLambda(i, substFix(fb, fName), e))
+    }
+    case EVal(_) | ELeaf => fb
+    case EVar(i) => if (i == fName) fixExpr else fb
+    case EFun(i, b) => if (i == fName) fb else EFun(i, substFix(b, fName))
+    case EFix(fn, fb) => if (fn == fName) fb else EFix(fn, substFix(fb, fName))
+    case EApp(e1, e2) => EApp(substFix(e1, fName), substFix(e2, fName))
+    case EAdd(op, e1, e2) => EAdd(op, substFix(e1, fName), substFix(e2, fName))
+    case ECmp(op, e1, e2) => ECmp(op, substFix(e1, fName), substFix(e2, fName))
+    case EITE(e1, e2, e3) => EITE(substFix(e1, fName), substFix(e2, fName), substFix(e3, fName))
+    case ETuple(e1, e2) => ETuple(substFix(e1, fName), substFix(e2, fName))
+    case ENode(e1, e2, e3) => ENode(substFix(e1, fName), substFix(e2, fName), substFix(e3, fName))
+    case ECaseOfProduct(e, b, body) => ECaseOfProduct(substFix(e, fName), b, substFix(body, fName))
+    case ECaseOfTree(e, lb, binds, nb) => {
+      ECaseOfTree(substFix(e, fName), substFix(lb, fName), binds, substFix(nb, fName))
+    }
+  }
+
 
   def cek(state: State, vSub: ValSubst, tSub: TypeSubst): (State, ValSubst, TypeSubst) = {
     state match {
@@ -104,6 +123,10 @@ object Evaluation {
       case EVal(v) => ((Right(v), env, kont), vSub, tSub)
       case EVar(i) => ((Right(env(i)), env, kont), vSub, tSub)
       case EFun(i, b) => ((Right(VLambda(i, b, env)), env, kont), vSub, tSub)
+      case fixExpr@EFix(fn, fb) => {
+        val sfb = substFix(fb, fn)(fixExpr)
+        ((Left(sfb), env, kont), vSub, tSub)
+      }
       case EApp(e1, e2) => ((Left(e1), env, KAppL(e2, env) :: kont), vSub, tSub)
       case EAdd(op, e1, e2) => ((Left(e1), env, KAddL(e2, op, env) :: kont), vSub, tSub)
       case ECmp(op, e1, e2) => ((Left(e1), env, KCmpL(e2, op, env) :: kont), vSub, tSub)
