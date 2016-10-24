@@ -1,7 +1,11 @@
 package dwit
-import Syntax._
 
 object Substitution {
+  import Syntax._
+
+  type TypeSubst = Map[TAlpha, Type]
+  type ValSubst = Map[VHole, Value]
+
   def apply(typ: Type)(implicit subst: TypeSubst): Type = typ match {
     case TInt | TBool | TFun => typ
     case TTuple(t1, t2) => TTuple(apply(t1), apply(t2))
@@ -21,11 +25,11 @@ object Substitution {
   def compose(alpha: TAlpha, typ: Type, subst: TypeSubst): TypeSubst = {
     // println(s"Composing ($alpha -> $typ) and $subst")
     val normalized = Map(alpha -> apply(typ)(subst))
-    normalized ++ subst.mapValues(t => apply(t)(normalized))
+    subst.mapValues(t => apply(t)(normalized)) ++ normalized
   }
 
   def compose(hole: VHole, v: Value, subst: ValSubst): ValSubst = {
     val normalized = Map(hole -> apply(v)(subst))
-    normalized ++ subst.mapValues(v => apply(v)(normalized))
+    subst.mapValues(v => apply(v)(normalized)) ++ normalized
   }
 }

@@ -26,6 +26,7 @@ object Context {
 object Evaluation {
   import Context._
   import Helpers._
+  import Substitution._
 
   type EoV = Either[Expr, Value]
   type Stack = List[Kont]

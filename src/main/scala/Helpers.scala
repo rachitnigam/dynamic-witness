@@ -1,7 +1,7 @@
 package dwit
-import Syntax._
 
 object FreshGen {
+  import Syntax._
 
   private var typeId: TypeId = 0
   private var holeId: HoleId = 0
@@ -24,6 +24,7 @@ object FreshGen {
 
 object Helpers {
 
+  import Syntax._
   import FreshGen._
   import Substitution._
 

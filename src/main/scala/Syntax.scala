@@ -1,12 +1,11 @@
 package dwit
+
 object Syntax {
 
   type Id = String
   type TypeId = Int
   type HoleId = Int
 
-  type TypeSubst = Map[TAlpha, Type]
-  type ValSubst = Map[VHole, Value]
   type Env = Map[Id, Value]
 
   sealed trait Expr {
@@ -68,7 +67,7 @@ object Syntax {
       case TFun => s"fun"
       case TTuple(t1, t2) => s"($t1, $t2)"
       case TTree(t) => s"tree $t"
-      case TAlpha(i) => s"\'${(97 + i).toChar}"
+      case TAlpha(i) => s"\'${(96 + i).toChar}"
     }
   }
   case object TInt extends Type

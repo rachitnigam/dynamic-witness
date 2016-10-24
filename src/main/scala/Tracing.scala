@@ -3,6 +3,7 @@ package dwit
 object Tracing {
   import Evaluation._
   import Syntax._
+  import Substitution._
 
   def tracingCekLoop(state: State, vSub: ValSubst, tSub: TypeSubst, gr: StringBuilder): String = {
     state._1 match {

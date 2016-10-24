@@ -1,9 +1,11 @@
 package dwit
 
 object Witness {
+
   import Evaluation._
   import FreshGen._
   import Syntax._
+  import Substitution._
 
   def findWitness(e: Expr) = _findWitness(0, e)
 
