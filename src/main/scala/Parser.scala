@@ -15,15 +15,6 @@ class Parse extends RegexParsers with PackratParsers {
     boolConst
   }
 
-  def _add: (Int, Int) => Int = (_ + _)
-  def _mul: (Int, Int) => Int = (_ * _)
-  def _div: (Int, Int) => Int = (_ / _)
-  def _sub: (Int, Int) => Int = (_ - _)
-
-  def _eq: (Int, Int) => Boolean = (_ == _)
-  def _lt: (Int, Int) => Boolean = (_ < _)
-  def _gt: (Int, Int) => Boolean = (_ > _)
-
   type P[A] = PackratParser[A]
 
   lazy val number: P[Int] = """[-]?\d+""".r ^^ (x => x.toInt)
@@ -63,21 +54,21 @@ class Parse extends RegexParsers with PackratParsers {
     app
   )
   lazy val mul: P[Expr] =  (
-    mul ~ "*" ~ app ^^ { case l ~ _ ~ r => EAdd(_mul, l, r) } |
-    mul ~ "/" ~ app ^^ { case l ~ _ ~ r => EAdd(_div, l, r) } |
+    mul ~ "*" ~ app ^^ { case l ~ _ ~ r => EAdd("mul", l, r) } |
+    mul ~ "/" ~ app ^^ { case l ~ _ ~ r => EAdd("div", l, r) } |
     list
   )
 
   lazy val add: P[Expr] =  (
-    add ~ "+" ~ mul ^^ { case l ~ _ ~ r => EAdd(_add, l,r) } |
-    add ~ "-" ~ mul ^^ { case l ~ _ ~ r => EAdd(_sub, l, r) } |
+    add ~ "+" ~ mul ^^ { case l ~ _ ~ r => EAdd("add", l,r) } |
+    add ~ "-" ~ mul ^^ { case l ~ _ ~ r => EAdd("sub", l, r) } |
     mul
   )
 
   lazy val cmp: P[Expr] =  (
-    add ~ ">" ~ add ^^ { case l ~ _ ~ r => ECmp(_gt,l,r) }  |
-    add ~ "<" ~ add ^^ { case l ~ _ ~ r => ECmp(_lt,l,r) }  |
-    add ~ "=" ~ add ^^ { case l ~ _ ~ r => ECmp(_eq,l,r) } |
+    add ~ ">" ~ add ^^ { case l ~ _ ~ r => EAdd("gt",l,r) }  |
+    add ~ "<" ~ add ^^ { case l ~ _ ~ r => EAdd("lt",l,r) }  |
+    add ~ "=" ~ add ^^ { case l ~ _ ~ r => EAdd("eq",l,r) } |
     add
   )
 

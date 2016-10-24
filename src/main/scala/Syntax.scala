@@ -17,8 +17,7 @@ object Syntax {
   case class EFun(id: Id, body: Expr) extends Expr
   case class EFix(fName: Id, func: Expr) extends Expr
   case class EApp(e1: Expr, e2: Expr) extends Expr
-  case class EAdd(op: (Int, Int) => Int, e1: Expr, e2: Expr) extends Expr
-  case class ECmp(op: (Int, Int) => Boolean, e1: Expr, e2: Expr) extends Expr
+  case class EAdd(op: String, e1: Expr, e2: Expr) extends Expr
   case class EITE(p: Expr, c: Expr, a: Expr) extends Expr
   case class ETuple(e1: Expr, e2: Expr) extends Expr
   case class ECaseOfProduct(e: Expr, bind: List[Id], body: Expr) extends Expr

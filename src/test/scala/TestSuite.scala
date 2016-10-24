@@ -6,7 +6,7 @@ import Evaluation._
 
 class TestSuite extends FunSuite {
 
-  def _add: (Int, Int) => Int = (_ + _)
+  def _add: String = "add"
 
   test("tuple") {
     val p = ETuple(EVal(VNum(1)), EVal(VNum(2)))

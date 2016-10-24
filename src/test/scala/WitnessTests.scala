@@ -1,8 +1,6 @@
 class WitnessTests extends org.scalatest.FunSuite {
-  import dwit._
-  import Syntax._
-  import Evaluation._
-  import Parser._
+  import dwit.Witness._
+  import dwit.Parser._
 
   test("simple witness") {
     val p = parse("""
