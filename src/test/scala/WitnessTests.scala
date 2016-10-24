@@ -21,5 +21,4 @@ class WitnessTests extends org.scalatest.FunSuite {
     )
     println(findWitness(p))
   }
-
 }

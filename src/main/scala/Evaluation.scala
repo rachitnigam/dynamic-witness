@@ -67,31 +67,9 @@ object Evaluation {
     state match {
       case (Right(v), _, Nil) => (v, vSub, tSub)
       case state => {
-        println(s"$state, $vSub, $tSub\n")
+        // println(s"$state, $vSub, $tSub\n")
         val (s, vs, ts) = cek(state, vSub, tSub)
         cekLoop(s, vs, ts)
-      }
-    }
-  }
-
-  def tracingCekLoop(state: State, vSub: ValSubst, tSub: TypeSubst, gr: StringBuilder): String = {
-    state._1 match {
-      case Left(r) => gr ++= s""""$r""""
-      case Right(r) => gr ++= s""""$r"""
-    }
-
-    state match {
-      case (Right(v), _, Nil) => {
-        gr ++= ";\n}"
-        gr.toString
-      }
-      case state => {
-        val (s, vs, ts) = cek(state, vSub, tSub)
-        s._1 match {
-          case Left(r) => gr ++= s""" -> "$r";"""
-          case Right(r) => gr ++= s""" -> "$r";"""
-        }
-        tracingCekLoop(s, vs, ts, gr)
       }
     }
   }

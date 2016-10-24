@@ -19,7 +19,7 @@ object Substitution {
   }
 
   def compose(alpha: TAlpha, typ: Type, subst: TypeSubst): TypeSubst = {
-    println(s"Composing ($alpha -> $typ) and $subst")
+    // println(s"Composing ($alpha -> $typ) and $subst")
     val normalized = Map(alpha -> apply(typ)(subst))
     normalized ++ subst.mapValues(t => apply(t)(normalized))
   }

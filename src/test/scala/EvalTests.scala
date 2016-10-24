@@ -21,6 +21,13 @@ class EvalTests extends org.scalatest.FunSuite {
     parseAndEval("""1 + 2 + 3""", VNum(6))
   }
 
+  test("print trace") {
+    import Tracing._
+    println(trace(parse("""
+      1 + 2 + 3""")))
+
+  }
+
   test("let statement") {
     parseAndEval("""let x = 1 in x + 1""", VNum(2))
   }
