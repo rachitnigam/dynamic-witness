@@ -10,23 +10,7 @@ object Syntax {
   type Env = Map[Id, Value]
 
   sealed trait Expr {
-    override def toString: String = this match {
-      case EVal(c) => c.toString
-      case EVar(id) => id
-      case EFun(id, b) => s"(fun $id -> $b)"
-      case EFix(fn, fb) => s"fix $fn -> $fb"
-      case EApp(e1, e2) => s"($e1 $e2)"
-      case EAdd(_, e1, e2) => s"$e1 add $e2"
-      case ECmp(_, e1, e2) => s"$e1 cmp $e2"
-      case EITE(p, c, a) => s"if $p then $c else $a"
-      case ETuple(e1, e2) => s"($e1, $e2)"
-      case ELeaf => "leaf"
-      case ENode(e1, e2, e3) => s"node($e1, $e2, $e3)"
-      case ECaseOfProduct(e, bind, b) => s"case $e of ${bind.mkString(",")} => $b"
-      case ECaseOfTree(e, lb, bind, b) => {
-        s"case $e of\nleaf => $lb\nnode ${bind.mkString(",")} => $b"
-      }
-    }
+    override def toString: String = Pretty.pretty(this)
   }
   case class EVal(v: Value) extends Expr
   case class EVar(id: Id) extends Expr

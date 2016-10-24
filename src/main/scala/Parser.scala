@@ -6,7 +6,7 @@ import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
 
 */
 
-private class ParseQuark extends RegexParsers with PackratParsers {
+class Parse extends RegexParsers with PackratParsers {
   import Syntax._
 
   var boolConst = 0
@@ -113,7 +113,7 @@ private class ParseQuark extends RegexParsers with PackratParsers {
 }
 
 object Parser {
-  private val parser = new ParseQuark()
+  private val parser = new Parse()
   import parser._
 
   def parse(str: String): Syntax.Expr = parseAll(expr, str.trim) match {

@@ -2,7 +2,6 @@ package dwit
 import Syntax._
 
 object Context {
-  type Env = Map[Id, Value]
 
   sealed trait Kont
   case class KAppL(e: Expr, env: Env) extends Kont
@@ -38,6 +37,8 @@ object Evaluation {
   case class Stuck(msg: String, vSub: ValSubst, tSub: TypeSubst) extends Exception(
     s"Stuck errors should be caught: $msg\ntypeSub: $tSub\nvalueSub: $vSub"
   )
+
+  case object Unreachable extends Exception("Hit a case that should be impossible")
 
   def findWitness(e: Expr) = _findWitness(0, e)
 
@@ -94,7 +95,6 @@ object Evaluation {
     }
   }
 
-
   def cek(state: State, vSub: ValSubst, tSub: TypeSubst): (State, ValSubst, TypeSubst) = {
     state match {
     case (Left(e), env, kont) => e match {
@@ -128,7 +128,7 @@ object Evaluation {
       case KAppR(fun, _) => narrow(fun, TFun, vSub, tSub) match {
         case (None, v, t) => throw Stuck(s"Failed on $kTop and $v", v, t)
         case (Some(VLambda(i, e, fEnv)), vs, ts) => ((Left(e), fEnv + (i -> v), kont), vs, ts)
-        case (Some(_), _, _) => ??? //Unreachable code
+        case (Some(_), _, _) => throw Unreachable
       }
 
       case KAddL(e, op, env) => ((Left(e), env, KAddR(v, op) :: kont), vSub, tSub)
@@ -139,10 +139,10 @@ object Evaluation {
           narrow(r, TInt, vs, ts) match {
             case (None, vs2, ts2) => throw Stuck(s"Failed on $kTop and $v", vs2, ts2)
             case (Some(VNum(rv)), vs2, ts2) => ((Right(VNum(op(rv, lv))), topEnv, kont), vs2, ts)
-            case _ => ??? // Unreachable Code
+            case _ => throw Unreachable
           }
         }
-        case (Some(_), _, _) => ??? //Unreachable code
+        case (Some(_), _, _) => throw Unreachable
       }
 
       case KCmpL(e, op, env) => ((Left(e), env, KCmpR(v, op) :: kont), vSub, tSub)
@@ -153,17 +153,17 @@ object Evaluation {
           narrow(r, TInt, vs, ts) match {
             case (None, vs2, ts2) => throw Stuck(s"Failed on $kTop and $v", vs2, ts2)
             case (Some(VNum(rv)), vs2, ts2) => ((Right(VBool(op(rv, lv))), topEnv, kont), vs2, ts)
-            case _ => ??? // Unreachable Code
+            case _ => throw Unreachable
           }
         }
-        case (Some(_), _, _) => ??? //Unreachable code
+        case (Some(_), _, _) => throw Unreachable
       }
 
       case KIf(c, a, env) => narrow(v, TBool, vSub, tSub) match {
         case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
         case (Some(VBool(true)), vs, ts) => ((Left(c), env, kont), vs, ts)
         case (Some(VBool(false)), vs, ts) => ((Left(a), env, kont), vs, ts)
-        case _ => ??? // Unreachable code
+        case _ => throw Unreachable
       }
 
       case KProdL(e, env) => ((Left(e), env, KProdR(v) :: kont), vSub, tSub)
@@ -193,7 +193,7 @@ object Evaluation {
           case (Some(VTuple(v1, v2)), vs, ts) => {
             ((Left(e), binds.zip(List(v1, v2)).toMap ++ env, kont), vs, ts)
           }
-          case _ => ??? // Unreachable code
+          case _ => throw Unreachable
         }
       }
 
@@ -205,7 +205,7 @@ object Evaluation {
             val bindMap = binds.zip(List(v1, v2, v3)).toMap
             ((Left(nb), bindMap ++ env, kont), vs, ts)
           }
-          case _ => ??? // Unreachable Code
+          case _ => throw Unreachable
         }
       }
     }
