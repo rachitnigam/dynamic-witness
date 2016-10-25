@@ -14,11 +14,11 @@ object Substitution {
   }
 
   def apply(v: Value)(implicit subst: ValSubst): Value = v match {
-    case VNum(_) | VBool(_) | VLambda(_, _, _) | Leaf(_) => v
+    case VNum(_) | VBool(_) | VLambda(_, _, _) | VNil(_) => v
     case hole@VHole(_, _) => subst.getOrElse(hole, hole)
     case VTuple(t1, t2) => VTuple(apply(t1), apply(t2))
-    case Node(t, t1, t2, t3) => {
-      Node(t, apply(t1), apply(t2), apply(t3))
+    case VCons(t, t1, t2) => {
+      VCons(t, apply(t1), apply(t2))
     }
   }
 

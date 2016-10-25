@@ -21,8 +21,8 @@ object Syntax {
   case class ETuple(e1: Expr, e2: Expr) extends Expr
   case class ECaseOfProduct(e: Expr, bind: List[Id], body: Expr) extends Expr
   case class ECaseOfTree(e: Expr, leafBody: Expr, bind: List[Id], body: Expr) extends Expr
-  case class ENode(e1: Expr, e2: Expr, e3: Expr) extends Expr
-  case object ELeaf extends Expr
+  case class ECons(e1: Expr, e2: Expr) extends Expr
+  case object ENil extends Expr
 
   def let(id: Id, v: Expr, body: Expr) = {
     EApp(EFun(id, body), v)
@@ -38,9 +38,6 @@ object Syntax {
     args.foldRight(body)({ case (id, acc) => mkFun(id, acc) })
   }
 
-
-  def cons(hd: Expr, tl: Expr) = ENode(hd, tl, ELeaf)
-
   sealed trait Value {
     override def toString: String = this match {
       case VNum(i) => i.toString
@@ -48,8 +45,8 @@ object Syntax {
       case VTuple(t1, t2) => s"($t1, $t2)"
       case VLambda(id, b, e) => s"(λ$id. $b, env: $e)"
       case VHole(i, t) => s"[$i, $t]"
-      case Leaf(t) => s"leaf[$t]"
-      case Node(t, t1, t2, t3) => s"node[$t]($t1, $t2, $t3)"
+      case VNil(_) => s"[]"
+      case VCons(_, t1, t2) => s"$t1::$t2"
     }
   }
   case class VNum(i: Int) extends Value
@@ -57,8 +54,8 @@ object Syntax {
   case class VTuple(v1: Value, v2: Value) extends Value
   case class VLambda(id: Id, body: Expr, closure: Env) extends Value
   case class VHole(ident: HoleId, typ: Type) extends Value
-  case class Node(t: Type, v1: Value, v2: Value, v3: Value) extends Value
-  case class Leaf(t: Type) extends Value
+  case class VCons(t: Type, v1: Value, v2: Value) extends Value
+  case class VNil(t: Type) extends Value
 
   sealed trait Type {
     override def toString: String = this match {

@@ -15,9 +15,8 @@ object Context {
   case class KProdL(e: Expr, env: Env) extends Kont
   case class KProdR(v: Value) extends Kont
 
-  case class KNode1(next: Expr, e: Expr, env: Env) extends Kont
-  case class KNode2(v: Value, next: Expr, env: Env) extends Kont
-  case class KNode3(v1: Value, v2: Value) extends Kont
+  case class KConsL(next: Expr, env: Env) extends Kont
+  case class KConsR(v: Value) extends Kont
 
   case class KCaseOfProduct(bind: List[Id], e: Expr, env: Env) extends Kont
   case class KCaseOfTree(leafBody: Expr, bind: List[Id], nodeBody: Expr, env: Env) extends Kont
@@ -81,7 +80,7 @@ object Evaluation {
     case vfun@EVal(VLambda(i, b, e)) => {
       if (i == fName) vfun else EVal(VLambda(i, substFix(fb, fName), e))
     }
-    case EVal(_) | ELeaf => fb
+    case EVal(_) | ENil => fb
     case EVar(i) => if (i == fName) fixExpr else fb
     case EFun(i, b) => if (i == fName) fb else EFun(i, substFix(b, fName))
     case EFix(fn, fb) => if (fn == fName) fb else EFix(fn, substFix(fb, fName))
@@ -89,7 +88,7 @@ object Evaluation {
     case EAdd(op, e1, e2) => EAdd(op, substFix(e1, fName), substFix(e2, fName))
     case EITE(e1, e2, e3) => EITE(substFix(e1, fName), substFix(e2, fName), substFix(e3, fName))
     case ETuple(e1, e2) => ETuple(substFix(e1, fName), substFix(e2, fName))
-    case ENode(e1, e2, e3) => ENode(substFix(e1, fName), substFix(e2, fName), substFix(e3, fName))
+    case ECons(e1, e2) => ECons(substFix(e1, fName), substFix(e2, fName))
     case ECaseOfProduct(e, b, body) => ECaseOfProduct(substFix(e, fName), b, substFix(body, fName))
     case ECaseOfTree(e, lb, binds, nb) => {
       ECaseOfTree(substFix(e, fName), substFix(lb, fName), binds, substFix(nb, fName))
@@ -132,8 +131,8 @@ object Evaluation {
       case ECaseOfTree(e, lb, b, nb) => {
        ((Left(e), env, KCaseOfTree(lb, b, nb, env) :: kont), vSub, tSub)
       }
-      case ENode(e1, e2, e3) => ((Left(e1), env, KNode1(e2, e3, env) :: kont), vSub, tSub)
-      case ELeaf => ((Right(Leaf(FreshGen.freshType())), env, kont), vSub, tSub)
+      case ECons(e1, e2) => ((Left(e1), env, KConsL(e2, env) :: kont), vSub, tSub)
+      case ENil => ((Right(VNil(FreshGen.freshType())), env, kont), vSub, tSub)
     }
 
     case (Right(_), _, Nil) => (state, vSub, tSub)
@@ -173,19 +172,13 @@ object Evaluation {
       case KProdL(e, env) => ((Left(e), env, KProdR(v) :: kont), vSub, tSub)
       case KProdR(vr) => ((Right(VTuple(vr, v)), topEnv, kont), vSub, tSub)
 
-      case KNode1(e1, e2, env) => ((Left(e1), env, KNode2(v, e2, env) :: kont), vSub, tSub)
-      case KNode2(v1, next, env) => ((Left(next), env, KNode3(v1, v) :: kont), vSub, tSub)
-      case KNode3(v1, v2) => {
-        val t = typeOf(v1)
-        narrow(v2, TTree(t), vSub, tSub) match {
+      case KConsL(e1, env) => ((Left(e1), env, KConsR(v) :: kont), vSub, tSub)
+      case KConsR(head) => {
+        val t = typeOf(head)
+        narrow(v, TTree(t), vSub, tSub) match {
           case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
-          case (Some(v2_res), vs, ts) => {
-            narrow(v, TTree(t), vs, ts) match {
-              case (None, vs2, ts2) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
-              case (Some(v3_res), vs2, ts2) => {
-                ((Right(Node(t, v1, v2_res, v3_res)), topEnv, kont), vs2, ts2)
-              }
-            }
+          case (Some(tail), vs, ts) => {
+                ((Right(VCons(t, head, tail)), topEnv, kont), vs, ts)
           }
         }
       }
@@ -205,9 +198,9 @@ object Evaluation {
       case KCaseOfTree(lb, binds, nb, env) => {
         narrow(v, TTree(FreshGen.freshType()), vSub, tSub) match {
           case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
-          case (Some(Leaf(t)), vs, ts) => ((Left(lb), env, kont), vs, ts)
-          case (Some(Node(t, v1, v2, v3)), vs, ts) => {
-            val bindMap = binds.zip(List(v1, v2, v3)).toMap
+          case (Some(VNil(t)), vs, ts) => ((Left(lb), env, kont), vs, ts)
+          case (Some(VCons(t, v1, v2)), vs, ts) => {
+            val bindMap = binds.zip(List(v1, v2)).toMap
             ((Left(nb), bindMap ++ env, kont), vs, ts)
           }
           case _ => throw Unreachable

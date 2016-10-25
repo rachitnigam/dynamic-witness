@@ -50,7 +50,7 @@ class Parse extends RegexParsers with PackratParsers {
   )
 
   lazy val list: P[Expr] = (
-    app ~ "::" ~ list ^^ { case h ~ _ ~ t => cons(h, t) } |
+    app ~ "::" ~ list ^^ { case h ~ _ ~ t => ECons(h, t) } |
     app
   )
   lazy val mul: P[Expr] =  (

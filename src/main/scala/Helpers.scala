@@ -35,9 +35,9 @@ object Helpers {
     // TODO(rachit): This might be wrong
     case TFun => VLambda("x", EVal(freshHole(freshType())), Map())
     case TTree(t) => scala.util.Random.nextGaussian match {
-      case n if n <= 0 => Leaf(t)
+      case n if n <= 0 => VNil(t)
       case _ => {
-        Node(t, freshHole(t), freshHole(TTree(t)), freshHole(TTree(t)))
+        VCons(t, freshHole(t), freshHole(TTree(t)))
       }
     }
     case a@TAlpha(_) => subst.get(a) match {
@@ -70,11 +70,11 @@ object Helpers {
         val theta2 = unify(typeOf(v2), t2, theta1)
         (Some(t), sig, theta2)
       }
-      case (l@Leaf(t1), TTree(t2)) => {
+      case (l@VNil(t1), TTree(t2)) => {
         val theta1 = unify(t1, t2, theta)
         (Some(l), sig, theta1)
       }
-      case (n@Node(t1, _, _, _), TTree(t2)) => {
+      case (n@VCons(t1, _, _), TTree(t2)) => {
         val theta1 = unify(t1, t2, theta)
         (Some(n), sig, theta1)
       }
@@ -101,8 +101,8 @@ object Helpers {
     case VBool(_) => TBool
     case VLambda(_, _, _) => TFun
     case VTuple(t1, t2) => TTuple(typeOf(t1), typeOf(t2))
-    case Leaf(t) => TTree(t)
-    case Node(t, _, _, _) => TTree(t)
+    case VNil(t) => TTree(t)
+    case VCons(t, _, _) => TTree(t)
     case VHole(_, t) => t
   }
 

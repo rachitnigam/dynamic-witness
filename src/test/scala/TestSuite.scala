@@ -14,24 +14,23 @@ class TestSuite extends FunSuite {
   }
 
   test("tree -- leaf") {
-    val p = ELeaf
+    val p = ENil
     eval(p) match {
-      case Leaf(_) => assert(true)
+      case VNil(_) => assert(true)
       case p => assert(false, s"leaf did not equal $p")
     }
   }
 
   test("tree -- node") {
-    val p = ENode(EVal(VNum(1)), ELeaf, ELeaf)
+    val p = ECons(EVal(VNum(1)), ENil)
 
     FreshGen.reset()
     val (res, _, ts) = cekLoop((Left(p), Map(), List()), Map(), Map())
 
     res match {
-      case Node(t, VNum(1), Leaf(t1), Leaf(t2)) => {
+      case VCons(t, VNum(1), VNil(t1)) => {
         val typeT1 = ts(t1.asInstanceOf[TAlpha]) == t
-        val typeT2 = ts(t2.asInstanceOf[TAlpha]) == t
-        assert(typeT2 && typeT1, s"Types in the tree don't match: $t, $t1, $t2")
+        assert(typeT1, s"Types in the tree don't match: $t, $t1")
       }
       case p => assert(false, s"leaf did not equal $p")
     }
@@ -68,14 +67,14 @@ class TestSuite extends FunSuite {
 
   test("case of -- tree: Leaf") {
     val p =
-      ECaseOfTree(ELeaf, EVal(VBool(true)), List("x", "y", "z"),
+      ECaseOfTree(ENil, EVal(VBool(true)), List("x", "y", "z"),
         EVal(VBool(false)))
     assert(eval(p) == VBool(true))
   }
 
   test("case of -- tree: Node") {
     val p =
-      ECaseOfTree(ENode(EVal(VNum(1)), ELeaf, ELeaf), EVal(VBool(true)),
+      ECaseOfTree(ECons(EVal(VNum(1)), ENil), EVal(VBool(true)),
         List("x", "y", "z"), EVar("x"))
     assert(eval(p) == VNum(1))
   }
