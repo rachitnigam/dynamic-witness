@@ -52,7 +52,7 @@ let (e1, e2) = e in b     ==> Underlying(ECaseOfProduct(e, List(e1, e2), b)
 fst e                     ==> Underlying(ECaseOfProduct(e, List(hd, tl), hd)
 snd e                     ==> Underlying(ECaseOfProduct(e, List(hd, tl), tl)
 ```
-while this desugaring convinient for my implementation, in an actual system, one would want all of theses constructs as primitive to supoort better error messages and debugging for the user.
+while this desugaring is convinient for my implementation, in an actual system, one would want all of theses constructs as primitive to support better error messages and debugging for the user.
 
 ### Comparison to the actual artifact
 - [NanoMaLy](https://github.com/ucsd-progsys/nanomaly/tree/master/src/NanoML), the implementation for the artifact described in the paper support a larger subset of OCaml than this implementation. The artifact implements exceptions, unit types, and records.
