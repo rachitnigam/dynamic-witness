@@ -43,7 +43,7 @@ expr ::=  n
 ### Desugaring
 A lot of the syntax given is sugar for a much simpler underlying syntax. The following rules are used by the desugarer:
 ```ocaml
-let id = e1 in e2         ==> (λid. e2) e1
+let id = e1 in e2         ==> (fun id -> e2) e1
 e1 or e2                  ==> if e1 then e1 else e2
 e1 and e2                 ==> if e1 then e2 else e1
 let fn ids = fb in b      ==> let fn = fun id1 -> fun id2 -> ... -> fb in b               where ids = [id1, id2, ..., idn]
