@@ -60,6 +60,7 @@ class Parse extends RegexParsers with PackratParsers {
   lazy val mul: P[Expr] =  (
     mul ~ "*" ~ app ^^ { case l ~ _ ~ r => EAdd("mul", l, r) } |
     mul ~ "/" ~ app ^^ { case l ~ _ ~ r => EAdd("div", l, r) } |
+    mul ~ "%" ~ app ^^ { case l ~ _ ~ r => EAdd("mod", l, r) } |
     list
   )
 

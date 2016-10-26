@@ -56,7 +56,7 @@ object Evaluation {
   // 0: Don't print data
   // 1: Simple trace
   // 2: Debuging
-  def cekLoop(state: State, vSub: ValSubst, tSub: TypeSubst, traceEval: Int = 1):
+  def cekLoop(state: State, vSub: ValSubst, tSub: TypeSubst, traceEval: Int = 0):
     (Value, ValSubst, TypeSubst) = {
     state match {
       case (Right(v), _, Nil) => (v, vSub, tSub)
@@ -105,6 +105,7 @@ object Evaluation {
     case "sub" => v1 - v2
     case "mul" => v1 * v2
     case "div" => v1 / v2
+    case "mod" => v1 % v2
     case "eq" => v1 == v2
     case "gt" => v1 > v2
     case "lt" => v1 < v2

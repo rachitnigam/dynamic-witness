@@ -41,4 +41,29 @@ class WitnessTests extends org.scalatest.FunSuite {
     )
     println(findWitness(p))
   }
+
+  test("list generation") {
+    val p = parse("""
+      let rec sum lst = match lst with
+        | [] -> []
+        | hd :: tl -> hd + (sum tl)
+      in sum"""
+      )
+    println(findWitness(p))
+  }
+
+  ignore("with a helper function") {
+    val p = parse("""
+      let rec append x xs = match xs with
+        | [] -> x :: []
+        | hd :: tl -> x :: xs
+
+      in let rec digitsOfInt n =
+        if n > 0 then []
+        else append (digitsOfInt (n / 10)) (n % 10) :: [] in
+
+      digitsOfInt
+        """)
+    println(findWitness(p))
+  }
 }

@@ -1,0 +1,4 @@
+let rec fac n = 
+  if n > 0 then 
+  n * fac (n - 1) else true
+in fac

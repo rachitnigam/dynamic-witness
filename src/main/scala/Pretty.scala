@@ -13,6 +13,7 @@ object Pretty extends PrettyPrinter {
     case "eq" => "="
     case "lt" => "<"
     case "gt" => ">"
+    case "mod" => "%"
   }
 
   def prettyExpr(e: Expr): Doc = e match {

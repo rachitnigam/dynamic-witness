@@ -1,0 +1,5 @@
+let tupler tup =
+  let f = fst tup in
+  if f then f + (snd tup)
+  else (snd tup)
+in tupler

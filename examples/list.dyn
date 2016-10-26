@@ -1,0 +1,4 @@
+let rec sum lst = match lst with
+  | [] -> []
+  | hd :: tl -> hd + (sum tl)
+in sum
