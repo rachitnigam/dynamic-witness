@@ -56,7 +56,7 @@ object Evaluation {
   // 0: Don't print data
   // 1: Simple trace
   // 2: Debuging
-  def cekLoop(state: State, vSub: ValSubst, tSub: TypeSubst, traceEval: Int = 0):
+  def cekLoop(state: State, vSub: ValSubst, tSub: TypeSubst, traceEval: Int = 1):
     (Value, ValSubst, TypeSubst) = {
     state match {
       case (Right(v), _, Nil) => (v, vSub, tSub)
@@ -188,7 +188,7 @@ object Evaluation {
         narrow(v, TTuple(a1, a2), vSub, tSub) match {
           case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
           case (Some(VTuple(v1, v2)), vs, ts) => {
-            ((Left(e), binds.zip(List(v1, v2)).toMap ++ env, kont), vs, ts)
+            ((Left(e), env ++ binds.zip(List(v1, v2)).toMap, kont), vs, ts)
           }
           case _ => throw Unreachable
         }
@@ -200,7 +200,7 @@ object Evaluation {
           case (Some(VNil(t)), vs, ts) => ((Left(lb), env, kont), vs, ts)
           case (Some(VCons(t, v1, v2)), vs, ts) => {
             val bindMap = binds.zip(List(v1, v2)).toMap
-            ((Left(nb), bindMap ++ env, kont), vs, ts)
+            ((Left(nb), env ++ bindMap, kont), vs, ts)
           }
           case _ => throw Unreachable
         }

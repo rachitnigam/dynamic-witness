@@ -29,7 +29,11 @@ object Pretty extends PrettyPrinter {
     case ECaseOfProduct(e, bs, b) => {
       "match" <+> prettyExpr(e) <+> "with" <+> parens(bs.mkString(", ")) <+> "->" <+> prettyExpr(b)
     }
-    case ECaseOfTree(e, lb, bs, b) => ???
+    case ECaseOfTree(e, lb, bs, b) => {
+      "match" <+> prettyExpr(e) <+> "with" <@>
+      nest("| [] ->" <+> prettyExpr(lb)) <@>
+      nest("| " <> bs.mkString("::") <+> "->" <+> prettyExpr(b))
+    }
     case node@ECons(e1, e2) => prettyExpr(e1) <+> colon <> colon <+> prettyExpr(e2)
     case ENil => text("[]")
   }

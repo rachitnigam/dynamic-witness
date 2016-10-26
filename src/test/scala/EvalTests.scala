@@ -176,11 +176,11 @@ class EvalTests extends org.scalatest.FunSuite {
 
   test("recursive list function") {
     parseAndEval("""
-      let lst = 1 :: 2 :: 3 :: 4 :: [] in
-      let rec sum lst = match lst with
+      let lst = 1 :: 2 :: [] in
+      let sum = fix help -> fun lst -> match lst with
         | [] -> 0
-        | hd :: tl -> hd + (sum tl)
+        | hd :: tl -> hd + (help tl)
       in (sum lst)
-      """, VNum(10))
+      """, VNum(3))
   }
 }

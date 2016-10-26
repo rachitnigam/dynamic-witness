@@ -75,7 +75,7 @@ object Helpers {
         val theta1 = unify(t1, t2, theta)
         (Some(l), sig, theta1)
       }
-      case (n@VCons(t1, _, _), TTree(t2)) => {
+      case (n@VCons(t1, v1,v2), TTree(t2)) => {
         val theta1 = unify(t1, t2, theta)
         (Some(n), sig, theta1)
       }
