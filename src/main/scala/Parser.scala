@@ -58,22 +58,22 @@ class Parse extends RegexParsers with PackratParsers {
     app
   )
   lazy val mul: P[Expr] =  (
-    mul ~ "*" ~ app ^^ { case l ~ _ ~ r => EAdd("mul", l, r) } |
-    mul ~ "/" ~ app ^^ { case l ~ _ ~ r => EAdd("div", l, r) } |
-    mul ~ "%" ~ app ^^ { case l ~ _ ~ r => EAdd("mod", l, r) } |
+    mul ~ "*" ~ app ^^ { case l ~ _ ~ r => EBinOp("mul", l, r) } |
+    mul ~ "/" ~ app ^^ { case l ~ _ ~ r => EBinOp("div", l, r) } |
+    mul ~ "%" ~ app ^^ { case l ~ _ ~ r => EBinOp("mod", l, r) } |
     list
   )
 
   lazy val add: P[Expr] =  (
-    add ~ "+" ~ mul ^^ { case l ~ _ ~ r => EAdd("add", l,r) } |
-    add ~ "-" ~ mul ^^ { case l ~ _ ~ r => EAdd("sub", l, r) } |
+    add ~ "+" ~ mul ^^ { case l ~ _ ~ r => EBinOp("add", l,r) } |
+    add ~ "-" ~ mul ^^ { case l ~ _ ~ r => EBinOp("sub", l, r) } |
     mul
   )
 
   lazy val cmp: P[Expr] =  (
-    add ~ ">" ~ add ^^ { case l ~ _ ~ r => EAdd("gt",l,r) }  |
-    add ~ "<" ~ add ^^ { case l ~ _ ~ r => EAdd("lt",l,r) }  |
-    add ~ "=" ~ add ^^ { case l ~ _ ~ r => EAdd("eq",l,r) } |
+    add ~ ">" ~ add ^^ { case l ~ _ ~ r => EBinOp("gt",l,r) }  |
+    add ~ "<" ~ add ^^ { case l ~ _ ~ r => EBinOp("lt",l,r) }  |
+    add ~ "=" ~ add ^^ { case l ~ _ ~ r => EBinOp("eq",l,r) } |
     add
   )
 

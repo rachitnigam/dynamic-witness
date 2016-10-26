@@ -9,7 +9,7 @@ object Substitution {
   def apply(typ: Type)(implicit subst: TypeSubst): Type = typ match {
     case TInt | TBool | TFun => typ
     case TTuple(t1, t2) => TTuple(apply(t1), apply(t2))
-    case TTree(t) => TTree(apply(t))
+    case TList(t) => TList(apply(t))
     case sub@TAlpha(i) => subst.getOrElse(sub, sub)
   }
 
@@ -27,7 +27,7 @@ object Substitution {
     case EFun(id, b) => EFun(id, normalizeExpr(b))
     case EFix(fName, fb) => EFix(fName, normalizeExpr(fb))
     case EApp(e1, e2) => EApp(normalizeExpr(e1), normalizeExpr(e2))
-    case EAdd(op, e1, e2) => EAdd(op, normalizeExpr(e1), normalizeExpr(e2))
+    case EBinOp(op, e1, e2) => EBinOp(op, normalizeExpr(e1), normalizeExpr(e2))
     case EITE(e1, e2, e3) => EITE(normalizeExpr(e1), normalizeExpr(e2), normalizeExpr(e3))
     case ETuple(e1, e2) => ETuple(normalizeExpr(e1), normalizeExpr(e2))
     case ECons(e1, e2) => ECons(normalizeExpr(e1), normalizeExpr(e2))

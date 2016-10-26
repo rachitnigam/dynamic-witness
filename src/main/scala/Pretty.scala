@@ -22,7 +22,7 @@ object Pretty extends PrettyPrinter {
     case EFun(id, body) => text("fun") <+> id <+> text("->") <+>  prettyExpr(body)
     case EFix(fn, fb) => text("fix") <+> fn <+> text("->") <+> prettyExpr(fb)
     case EApp(e1, e2) => parens(prettyExpr(e1)) <+> parens(prettyExpr(e2))
-    case EAdd(op, e1, e2) => prettyExpr(e1) <+> opToString(op) <+> prettyExpr(e2)
+    case EBinOp(op, e1, e2) => prettyExpr(e1) <+> opToString(op) <+> prettyExpr(e2)
     case EITE(p, c, a) => {
       "if" <+> prettyExpr(p) <+> "then" <+> prettyExpr(c) <+> "else" <+> prettyExpr(a)
     }

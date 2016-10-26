@@ -16,7 +16,7 @@ object Syntax {
   case class EFun(id: Id, body: Expr) extends Expr
   case class EFix(fName: Id, func: Expr) extends Expr
   case class EApp(e1: Expr, e2: Expr) extends Expr
-  case class EAdd(op: String, e1: Expr, e2: Expr) extends Expr
+  case class EBinOp(op: String, e1: Expr, e2: Expr) extends Expr
   case class EITE(p: Expr, c: Expr, a: Expr) extends Expr
   case class ETuple(e1: Expr, e2: Expr) extends Expr
   case class ECaseOfProduct(e: Expr, bind: List[Id], body: Expr) extends Expr
@@ -63,7 +63,7 @@ object Syntax {
       case TBool => "bool"
       case TFun => s"fun"
       case TTuple(t1, t2) => s"($t1, $t2)"
-      case TTree(t) => s"tree $t"
+      case TList(t) => s"list $t"
       case TAlpha(i) => s"\'${(96 + i).toChar}"
     }
   }
@@ -71,7 +71,6 @@ object Syntax {
   case object TBool extends Type
   case object TFun extends Type
   case class TTuple(e1: Type, e2: Type) extends Type
-  case class TTree(t: Type) extends Type
+  case class TList(t: Type) extends Type
   case class TAlpha(ident: TypeId) extends Type
-
 }

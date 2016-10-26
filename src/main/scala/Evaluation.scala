@@ -84,7 +84,7 @@ object Evaluation {
     case EFun(i, b) => if (i == fName) fb else EFun(i, substFix(b, fName))
     case EFix(fn, fb) => if (fn == fName) fb else EFix(fn, substFix(fb, fName))
     case EApp(e1, e2) => EApp(substFix(e1, fName), substFix(e2, fName))
-    case EAdd(op, e1, e2) => EAdd(op, substFix(e1, fName), substFix(e2, fName))
+    case EBinOp(op, e1, e2) => EBinOp(op, substFix(e1, fName), substFix(e2, fName))
     case EITE(e1, e2, e3) => EITE(substFix(e1, fName), substFix(e2, fName), substFix(e3, fName))
     case ETuple(e1, e2) => ETuple(substFix(e1, fName), substFix(e2, fName))
     case ECons(e1, e2) => ECons(substFix(e1, fName), substFix(e2, fName))
@@ -122,7 +122,7 @@ object Evaluation {
         ((Left(sfb), env, kont), vSub, tSub)
       }
       case EApp(e1, e2) => ((Left(e1), env, KAppL(e2, env) :: kont), vSub, tSub)
-      case EAdd(op, e1, e2) => ((Left(e1), env, KAddL(e2, op, env) :: kont), vSub, tSub)
+      case EBinOp(op, e1, e2) => ((Left(e1), env, KAddL(e2, op, env) :: kont), vSub, tSub)
       case EITE(p, c, a) => ((Left(p), env, KIf(c, a, env) :: kont), vSub, tSub)
       case ETuple(e1, e2) => ((Left(e1), env, KProdL(e2, env) :: kont), vSub, tSub)
       case ECaseOfProduct(e, b, body) => {
@@ -175,7 +175,7 @@ object Evaluation {
       case KConsL(e1, env) => ((Left(e1), env, KConsR(v) :: kont), vSub, tSub)
       case KConsR(head) => {
         val t = typeOf(head)
-        narrow(v, TTree(t), vSub, tSub) match {
+        narrow(v, TList(t), vSub, tSub) match {
           case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
           case (Some(tail), vs, ts) => {
                 ((Right(VCons(t, head, tail)), topEnv, kont), vs, ts)
@@ -196,7 +196,7 @@ object Evaluation {
       }
 
       case KCaseOfTree(lb, binds, nb, env) => {
-        narrow(v, TTree(FreshGen.freshType()), vSub, tSub) match {
+        narrow(v, TList(FreshGen.freshType()), vSub, tSub) match {
           case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
           case (Some(VNil(t)), vs, ts) => ((Left(lb), env, kont), vs, ts)
           case (Some(VCons(t, v1, v2)), vs, ts) => {
