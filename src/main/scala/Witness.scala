@@ -1,4 +1,5 @@
 package dwit
+import GlobalConfig._
 
 object Witness {
 
@@ -7,31 +8,23 @@ object Witness {
   import Syntax._
   import Substitution._
 
-  def findWitness(e: Expr, debug: Int = 0, bound: Int = 100): (ValSubst, TypeSubst) = {
-    _findWitness(debug, e, bound)
+  def findWitness(e: Expr, bound: Int = 100): List[Value] = {
+    _findWitness(0, e, bound)
   }
 
   case class WitnessNotFound(e: Expr) extends RuntimeException(s"Could not find witness for $e")
 
   // Helper function for witness finding
-  private def _findWitness(bound: Int, e: Expr, ubound: Int): (ValSubst, TypeSubst) = try {
+  private def _findWitness(bound: Int, e: Expr, ubound: Int): List[Value] = try {
     FreshGen.reset()
     saturateExpr(e)
     // Search for a witness with the bound.
-    if (bound >= ubound) throw WitnessNotFound(e)
+    if (bound >= ubound) error(WitnessNotFound(e))
     else _findWitness(bound + 1, e, ubound)
   } catch {
     case Stuck(_, vSub, tSub) => {
-      // Since we know that the execution got stuck, it will get stuck again in this eval.
-      // This means that returning None doesn't actually do anything other than resolving
-      // the type error since the code will always hit the Stuck case.
-      try {
-        saturateWithValsExpr(e, vSub)
-        throw WitnessNotFound(e)
-      } catch {
-        case Stuck(_, _, _) => (vSub, tSub)
-      }
-
+      println(vSub)
+      getArgumentsExpr(e, vSub)
     }
   }
 
@@ -45,16 +38,20 @@ object Witness {
   }
 
   // To be used when the trace is being generated.
-  def saturateWithValsExpr(e: Expr, vSub: ValSubst): Value = {
+  def getArgumentsExpr(e: Expr, vSub: ValSubst): List[Value] = {
     FreshGen.reset()
-    saturateWithVals(eval(e, 0), vSub)
+    getArgumentsVal(eval(e), vSub, List())
   }
-  def saturateWithVals(v: Value, vSub: ValSubst): Value = v match {
+  def getArgumentsVal(v: Value, vSub: ValSubst, acc: List[Value]): List[Value] = v match {
     case f: VLambda => {
       val hole = FreshGen.freshHole(FreshGen.freshType)
       val v = vSub(hole)
-      saturate(eval(EApp(EVal(f), EVal(v)), 0))
+      try {
+        getArgumentsVal(eval(EApp(EVal(f), EVal(v))), vSub, acc :+ v)
+      } catch {
+        case Stuck(_, _, _) => acc :+ v
+      }
     }
-    case _ => v
+    case _ => acc
   }
 }

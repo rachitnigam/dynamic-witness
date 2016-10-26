@@ -9,12 +9,6 @@ import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
 class Parse extends RegexParsers with PackratParsers {
   import Syntax._
 
-  var boolConst = 0
-  def freshBoolConst(): Int = {
-    boolConst += 1
-    boolConst
-  }
-
   type P[A] = PackratParser[A]
 
   lazy val number: P[Int] = """[-]?\d+""".r ^^ (x => x.toInt)
@@ -78,18 +72,12 @@ class Parse extends RegexParsers with PackratParsers {
   )
 
   lazy val and: P[Expr] =  (
-    and ~ "and" ~ cmp ^^ { case l ~ _ ~ r => {
-      val nname = "_and" + freshBoolConst().toString
-      let(nname, l, EITE(EVar(nname), r, EVar(nname)))
-    }} |
+    and ~ "and" ~ cmp ^^ { case l ~ _ ~ r => EITE(r, l, r) } |
     cmp
   )
 
   lazy val or: P[Expr] =  (
-    or ~ "or" ~ and ^^ { case l ~ _ ~ r => {
-      val nname = "_or" + freshBoolConst().toString
-      let(nname, l, EITE(EVar(nname), EVar(nname), r))
-    }}  |
+    or ~ "or" ~ and ^^ { case l ~ _ ~ r => EITE(l, l, r) }  |
     and
   )
 

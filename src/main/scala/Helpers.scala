@@ -5,9 +5,10 @@ object Helpers {
   import Syntax._
   import FreshGen._
   import Substitution._
+  import GlobalConfig._
 
   def gen(typ: Type)(implicit subst: TypeSubst): Value = typ match {
-    case TInt => VNum(10) //TODO(Change this to be random)
+    case TInt => VNum(scala.util.Random.nextInt(50))
     case TBool => VBool(scala.util.Random.nextBoolean)
     case TTuple(t1, t2) => VTuple(gen(t1), gen(t2))
     case TFun => VLambda("x", EVal(freshHole(freshType())), Map())
@@ -94,7 +95,7 @@ object Helpers {
           unify(l2, r2, substPrime)
         }
         case (TList(t1), TList(t2)) => unify(t1, t2, subst)
-        case _  => throw new UnificationError(s"Tried to unify $t1 and $t2")
+        case _  => error(UnificationError(s"Tried to unify $t1 and $t2"))
       }
     }
   }

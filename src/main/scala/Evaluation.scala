@@ -1,5 +1,6 @@
 package dwit
 import Syntax._
+import GlobalConfig._
 
 object Context {
 
@@ -42,33 +43,17 @@ object Evaluation {
     case Right(e) => e.toString
   }
 
-  // traceEval int indicates the level of information that should be displayed
-  // while evaluating the expression.
-  // 0: Don't print data
-  // 1: Simple trace
-  // 2: Debuging
-  def eval(e: Expr, traceEval: Int = 0): Value = {
-    cekLoop((Left(e), Map(), List()), Map(), Map(), traceEval)._1
+  def eval(e: Expr): Value = {
+    cekLoop((Left(e), Map(), List()), Map(), Map())._1
   }
 
-  // traceEval int indicates the level of information that should be displayed
-  // while evaluating the expression.
-  // 0: Don't print data
-  // 1: Simple trace
-  // 2: Debuging
-  def cekLoop(state: State, vSub: ValSubst, tSub: TypeSubst, traceEval: Int = 0):
+  def cekLoop(state: State, vSub: ValSubst, tSub: TypeSubst):
     (Value, ValSubst, TypeSubst) = {
     state match {
       case (Right(v), _, Nil) => (v, vSub, tSub)
       case state => {
-        if(traceEval == 1) {
-          println(s"${eitherToString(state._1)}")
-        }
-
-        else if(traceEval == 2) {
-          println(s"$state, $vSub, $tSub\n")
-        }
-
+        log1(s"${eitherToString(state._1)}")
+        log2(s"$state, $vSub, $tSub\n")
         val (s, vs, ts) = cek(state, vSub, tSub)
         cekLoop(s, vs, ts)
       }
@@ -97,7 +82,7 @@ object Evaluation {
   def toValue(v: Any): Value = v match {
     case _ : Boolean => VBool(v.asInstanceOf[Boolean])
     case _ : Int => VNum(v.asInstanceOf[Int])
-    case _ => throw Unreachable
+    case _ => error(Unreachable)
   }
 
   def applyFun(op: String, v1: Int, v2: Int): Value = toValue(op match {
@@ -141,32 +126,32 @@ object Evaluation {
       case KAppL(e, env) => ((Left(e), env, KAppR(v, env) :: kont), vSub, tSub)
 
       case KAppR(fun, _) => narrow(fun, TFun, vSub, tSub) match {
-        case (None, v, t) => throw Stuck(s"Failed on $kTop and $v", v, t)
+        case (None, v, t) => error(Stuck(s"Failed on $kTop and $v", v, t))
         case (Some(VLambda(i, e, fEnv)), vs, ts) => ((Left(e), fEnv + (i -> v), kont), vs, ts)
-        case (Some(_), _, _) => throw Unreachable
+        case (Some(_), _, _) => error(Unreachable)
       }
 
       case KAddL(e, op, env) => ((Left(e), env, KAddR(v, op) :: kont), vSub, tSub)
 
       case KAddR(r, op) => narrow(v, TInt, vSub, tSub) match {
-        case (None, v, t) => throw Stuck(s"Failed on $kTop and $v", v, t)
+        case (None, v, t) => error(Stuck(s"Failed on $kTop and $v", v, t))
         case (Some(VNum(lv)), vs, ts) => {
           narrow(r, TInt, vs, ts) match {
-            case (None, vs2, ts2) => throw Stuck(s"Failed on $kTop and $v", vs2, ts2)
+            case (None, vs2, ts2) => error(Stuck(s"Failed on $kTop and $v", vs2, ts2))
             case (Some(VNum(rv)), vs2, ts2) => {
               ((Right(applyFun(op, rv, lv)), topEnv, kont), vs2, ts)
             }
-            case _ => throw Unreachable
+            case _ => error(Unreachable)
           }
         }
-        case (Some(_), _, _) => throw Unreachable
+        case (Some(_), _, _) => error(Unreachable)
       }
 
       case KIf(c, a, env) => narrow(v, TBool, vSub, tSub) match {
-        case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
+        case (None, vs, ts) => error(Stuck(s"Failed on $kTop and $v", vs, ts))
         case (Some(VBool(true)), vs, ts) => ((Left(c), env, kont), vs, ts)
         case (Some(VBool(false)), vs, ts) => ((Left(a), env, kont), vs, ts)
-        case _ => throw Unreachable
+        case _ => error(Unreachable)
       }
 
       case KProdL(e, env) => ((Left(e), env, KProdR(v) :: kont), vSub, tSub)
@@ -176,7 +161,7 @@ object Evaluation {
       case KConsR(head) => {
         val t = typeOf(head)
         narrow(v, TList(t), vSub, tSub) match {
-          case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
+          case (None, vs, ts) => error(Stuck(s"Failed on $kTop and $v", vs, ts))
           case (Some(tail), vs, ts) => {
                 ((Right(VCons(t, head, tail)), topEnv, kont), vs, ts)
           }
@@ -187,23 +172,23 @@ object Evaluation {
         val a1 = FreshGen.freshType()
         val a2 = FreshGen.freshType()
         narrow(v, TTuple(a1, a2), vSub, tSub) match {
-          case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
+          case (None, vs, ts) => error(Stuck(s"Failed on $kTop and $v", vs, ts))
           case (Some(VTuple(v1, v2)), vs, ts) => {
             ((Left(e), env ++ binds.zip(List(v1, v2)).toMap, kont), vs, ts)
           }
-          case _ => throw Unreachable
+          case _ => error(Unreachable)
         }
       }
 
       case KCaseOfTree(lb, binds, nb, env) => {
         narrow(v, TList(FreshGen.freshType()), vSub, tSub) match {
-          case (None, vs, ts) => throw Stuck(s"Failed on $kTop and $v", vs, ts)
+          case (None, vs, ts) => error(Stuck(s"Failed on $kTop and $v", vs, ts))
           case (Some(VNil(t)), vs, ts) => ((Left(lb), env, kont), vs, ts)
           case (Some(VCons(t, v1, v2)), vs, ts) => {
             val bindMap = binds.zip(List(v1, v2)).toMap
             ((Left(nb), env ++ bindMap, kont), vs, ts)
           }
-          case _ => throw Unreachable
+          case _ => error(Unreachable)
         }
       }
     }

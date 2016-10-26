@@ -19,8 +19,8 @@ object Pretty extends PrettyPrinter {
   def prettyExpr(e: Expr): Doc = e match {
     case EVal(v) => v.toString
     case EVar(id) => text(id)
-    case EFun(id, body) => text("fun") <+> id <+> text("->") <+>  prettyExpr(body)
-    case EFix(fn, fb) => text("fix") <+> fn <+> text("->") <+> prettyExpr(fb)
+    case EFun(id, body) => text("fun") <+> id <+> text("->") <+> nest(prettyExpr(body))
+    case EFix(fn, fb) => text("fix") <+> fn <+> text("->") <+> nest(prettyExpr(fb))
     case EApp(e1, e2) => parens(prettyExpr(e1)) <+> parens(prettyExpr(e2))
     case EBinOp(op, e1, e2) => prettyExpr(e1) <+> opToString(op) <+> prettyExpr(e2)
     case EITE(p, c, a) => {
