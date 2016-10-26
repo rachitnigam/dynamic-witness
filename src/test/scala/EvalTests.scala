@@ -145,4 +145,42 @@ class EvalTests extends org.scalatest.FunSuite {
       in add 4 6""", VNum(10)
     )
   }
+
+  test("calling fst and snd on a tuple") {
+    parseAndEval("""
+      let tup = (1,2) in
+      let sum_tup tup = (fst tup) + (snd tup) in
+      sum_tup tup
+      """, VNum(3)
+      )
+  }
+
+  test("matching on tuples") {
+    parseAndEval("""
+      let tup = (1,2) in
+      let (hd, tl) = tup in
+      hd + tl
+      """, VNum(3)
+      )
+  }
+
+  test("matching on lists") {
+    parseAndEval("""
+      let lst = 1::2::[] in
+      match lst with
+        | [] -> 0
+        | hd::tl -> hd
+        """, VNum(1)
+        )
+  }
+
+  test("recursive list function") {
+    parseAndEval("""
+      let lst = 1 :: 2 :: 3 :: 4 :: [] in
+      let rec sum lst = match lst with
+        | [] -> 0
+        | hd :: tl -> hd + (sum tl)
+      in (sum lst)
+      """, VNum(10))
+  }
 }

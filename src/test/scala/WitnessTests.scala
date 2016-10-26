@@ -19,4 +19,26 @@ class WitnessTests extends org.scalatest.FunSuite {
     )
     println(findWitness(p))
   }
+
+  test("tuple function") {
+    val p = parse("""
+      let tupler tup =
+        let f = fst tup in
+        if f then f + (snd tup)
+        else (snd tup)
+      in tupler
+      """
+    )
+    println(findWitness(p))
+  }
+
+  test("function generation") {
+    val p = parse("""
+      fun f ->
+        if (f 0) then (f true) + 2
+        else 2
+    """
+    )
+    println(findWitness(p))
+  }
 }

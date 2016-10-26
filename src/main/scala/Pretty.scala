@@ -26,7 +26,9 @@ object Pretty extends PrettyPrinter {
       "if" <+> prettyExpr(p) <+> "then" <+> prettyExpr(c) <+> "else" <+> prettyExpr(a)
     }
     case ETuple(e1, e2) => parens(prettyExpr(e1) <> comma <+> prettyExpr(e2))
-    case ECaseOfProduct(e, bs, b) => ???
+    case ECaseOfProduct(e, bs, b) => {
+      "match" <+> prettyExpr(e) <+> "with" <+> parens(bs.mkString(", ")) <+> "->" <+> prettyExpr(b)
+    }
     case ECaseOfTree(e, lb, bs, b) => ???
     case node@ECons(e1, e2) => prettyExpr(e1) <+> colon <> colon <+> prettyExpr(e2)
     case ENil => text("[]")

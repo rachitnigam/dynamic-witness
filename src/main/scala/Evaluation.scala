@@ -48,7 +48,6 @@ object Evaluation {
   // 1: Simple trace
   // 2: Debuging
   def eval(e: Expr, traceEval: Int = 0): Value = {
-    FreshGen.reset()
     cekLoop((Left(e), Map(), List()), Map(), Map(), traceEval)._1
   }
 
