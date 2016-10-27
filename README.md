@@ -9,7 +9,8 @@ Implementation of http://eric.seidel.io/pub/nanomaly-icfp16.pdf.
 ### Running
 1. From the directory containing `src`, run `sbt`.
 2. Run `compile` and then `test`.
-2. Use the command `run witness` to generate witnesses for a ill-typed program.
+3. Use the command `run witness` to generate witnesses for a ill-typed program.
+4. Use the command `run eval` to evaluate a program.
 
 ### Syntax
 The BNF for the toy language implemeneted for this prototype is the following:
